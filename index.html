@@ -6,11 +6,11 @@
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="FOCUS">
+<meta name="apple-mobile-web-app-title" content="番茄鐘">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>FOCUS</title>
+<title>番茄鐘</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -76,7 +76,7 @@ button:disabled{cursor:default}
 /* header */
 .top{display:flex;align-items:center;justify-content:space-between;min-height:60px;gap:8px}
 .brand{display:flex;flex-direction:column;gap:1px;min-width:0}
-.logo{font-weight:650;font-size:15px;letter-spacing:.3em}
+.logo{font-weight:650;font-size:17px;letter-spacing:.14em}
 .dateline{font-size:12.5px;color:var(--muted-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-actions{display:flex;gap:2px}
 .icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--muted-strong);display:grid;place-items:center;transition:background .15s,transform .1s}
@@ -238,6 +238,27 @@ details.about{margin:20px 4px 0;font-size:13px;color:var(--muted-strong);line-he
 details.about summary{min-height:44px;display:flex;align-items:center;font-weight:600;cursor:pointer}
 details.about p{margin:0 0 10px}
 
+/* ringtone settings */
+h2.sec.sub{margin-top:20px}
+.group :focus-visible{outline-offset:-3px}
+.tone-head{padding:12px 16px 4px;font-size:12.5px;font-weight:600;letter-spacing:.06em;color:var(--muted-strong);border-top:1px solid var(--line)}
+.tone-row{display:flex;align-items:center;gap:4px;padding-right:12px;border-top:1px solid var(--line)}
+.tone-head+.tone-row{border-top:0}
+.tone-pick{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 8px 8px 16px;border:0;background:none;text-align:left;color:var(--fg)}
+.tone-pick:active{background:var(--seg)}
+.tone-radio{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center;color:var(--on-accent)}
+.tone-pick[aria-checked="true"] .tone-radio{background:var(--accent);border-color:var(--accent)}
+.tone-txt{display:flex;flex-direction:column;min-width:0;flex:1}
+.tone-txt .row-t{overflow-wrap:anywhere}
+.tone-state{flex:none;font-size:12px;font-weight:600;color:var(--accent-text)}
+.tone-row .small-btn{flex:none;min-width:60px}
+.tone-sub{display:flex;justify-content:flex-end;gap:2px;padding:0 8px 6px}
+.tone-sub .link-btn{min-height:44px;padding:0 12px;font-size:14px}
+.tone-sub .link-btn.danger{color:var(--danger)}
+.msg.bad{color:var(--danger)}
+.small-btn:disabled,.btn:disabled{opacity:.45}
+.group .row-btn{min-height:44px}
+
 /* nav */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);padding:4px max(8px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(8px,env(safe-area-inset-left,0px))}
 .nav-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
@@ -299,7 +320,7 @@ legend{padding:0}
   <div id="banner" class="banner" role="status" hidden><p id="bannerText"></p><button type="button" data-action="banner-dismiss">知道了</button></div>
   <header class="top">
     <div class="brand">
-      <span class="logo">FOCUS</span>
+      <span class="logo">番茄鐘</span>
       <span class="dateline" id="dateLine"></span>
     </div>
     <div class="top-actions">
@@ -362,8 +383,14 @@ legend{padding:0}
       <div class="group" id="gTimer"></div>
       <p class="note" id="settingsNote" hidden>目前階段已開始，新的時間會從下一階段起生效。</p>
 
-      <h2 class="sec">提醒</h2>
+      <h2 class="sec">鈴聲與提醒</h2>
       <div class="group" id="gAlert"></div>
+
+      <h2 class="sec sub">鈴聲選擇</h2>
+      <div class="group" id="gTone"></div>
+      <p class="msg" id="toneMsg" role="status" aria-live="polite"></p>
+      <p class="note">網頁無法讀取或使用 iPhone「設定」裡的系統鈴聲。想用自己的聲音，請從「檔案」匯入音訊；匯入的檔案只保存在這個瀏覽器。</p>
+      <input type="file" id="toneFile" class="sr" tabindex="-1" aria-hidden="true" accept="audio/*,.mp3,.m4a,.aac,.wav">
 
       <h2 class="sec">外觀</h2>
       <div class="group"><div class="row"><div class="row-l"><div class="row-t">深色模式</div></div></div>
@@ -380,9 +407,10 @@ legend{padding:0}
 
       <details class="about">
         <summary>關於背景計時與提醒</summary>
-        <p>FOCUS 以「結束時間」計算剩餘時間，不是每秒減一。切換 App 或鎖定螢幕後回到本頁，會立即顯示正確的剩餘時間，或已結束的狀態。</p>
+        <p>番茄鐘以「結束時間」計算剩餘時間，不是每秒減一。切換 App 或鎖定螢幕後回到本頁，會立即顯示正確的剩餘時間，或已結束的狀態。</p>
         <p>iPhone 的網頁在背景或鎖定螢幕時，不保證繼續執行，所以結束的那一刻不一定會有聲音、震動或通知。需要準時提醒時，請保持本頁在前景並開啟「保持螢幕亮著」。</p>
-        <p>網頁通知與網頁內音效是兩件不同的事，授權與否互不影響。iPhone 側邊的靜音開關開啟時，網頁音效不會發出聲音。</p>
+        <p>網頁通知與網頁內音效是兩件不同的事，授權與否互不影響。iPhone 側邊的靜音開關開啟時，網頁音效可能不會發出聲音，音量也受手機系統音量限制。</p>
+        <p>網頁在背景或鎖定螢幕時若被 iOS 暫停，回到本頁後只會顯示已結束的狀態，不會補播鈴聲。第一次使用鈴聲前，請先按一次「開始專注」或「試聽」，讓 iOS 允許網頁發出聲音。</p>
       </details>
     </section>
   </main>
@@ -408,7 +436,13 @@ var TZ=8*3600*1000;                       // Asia/Taipei 全年 UTC+8，無日�
 var CATS=['讀書','工作','生活'];
 var MODE_NAME={focus:'專注',short:'短休息',long:'長休息'};
 var HINT={focus:'一次只做好一件事',short:'站起來，喝口水',long:'離開螢幕，好好休息'};
-var DEFAULTS={focus:25,short:5,long:15,cycles:4,goal:4,volume:60,autoStart:false,sound:true,vibrate:true,notify:false,wakeLock:false,theme:'system'};
+var DEFAULTS={focus:25,short:5,long:15,cycles:4,goal:4,volume:60,autoStart:false,sound:true,vibrate:true,notify:false,wakeLock:false,theme:'system',
+  tone:'triad',toneFocus:'triad',toneShort:'triad',toneLong:'triad',toneSame:true};   // 預設 triad = 原本的三音提示，舊使用者聽到的聲音不變
+var DEFAULT_TONE='triad';
+var MAX_CUSTOM=5, MAX_TONE_BYTES=5*1024*1024, MAX_TONE_SECS=60, PLAY_CAP=30;
+var STAGE_LABEL={focus:'專注結束',short:'短休息結束',long:'長休息結束'};
+var STAGE_KEY={focus:'toneFocus',short:'toneShort',long:'toneLong'};
+function freshSettings(){var s=Object.assign({},DEFAULTS);s.customTones=[];return s;}
 var LIMITS={focus:[1,120],short:[1,60],long:[1,90],cycles:[2,12],goal:[1,24]};
 var RING_C=590.62;
 
@@ -446,11 +480,11 @@ function icon(n,size){size=size||22;return '<svg class="ic" width="'+size+'" hei
 
 /* ───────── 狀態與資料驗證 ───────── */
 var state, storageOk=true, bannerKind=null;
-var ui={page:'focus',filter:'open',range:'today',metric:'poms',dayKey:'',today:{poms:0,mins:0,done:0},last:'',btnKey:''};
+var ui={note:'',previewId:null,toneStage:'focus',page:'focus',filter:'open',range:'today',metric:'poms',dayKey:'',today:{poms:0,mins:0,done:0},last:'',btnKey:''};
 
 function durMs(mode,s){return (mode==='focus'?s.focus:mode==='short'?s.short:s.long)*60000;}
 function newTimer(mode,s){var p=durMs(mode,s);return {mode:mode,status:'idle',planMs:p,remainMs:p,endAt:0,startedAt:0,taskId:null,taskName:'',lastSeen:0};}
-function defaultState(){return {app:'focus',v:1,settings:Object.assign({},DEFAULTS),tasks:[],doneLog:[],log:[],currentTaskId:null,streak:0,timer:newTimer('focus',DEFAULTS)};}
+function defaultState(){return {app:'focus',v:1,settings:freshSettings(),tasks:[],doneLog:[],log:[],currentTaskId:null,streak:0,timer:newTimer('focus',DEFAULTS)};}
 
 function sanitizeTimer(t,s){
   if(!t||['focus','short','long'].indexOf(t.mode)<0)return newTimer('focus',s);
@@ -466,11 +500,23 @@ function sanitizeTimer(t,s){
 
 function sanitize(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
-  var rs=raw.settings&&typeof raw.settings==='object'?raw.settings:{}, s=Object.assign({},DEFAULTS), k;
+  var rs=raw.settings&&typeof raw.settings==='object'?raw.settings:{}, s=freshSettings(), k;
   for(k in LIMITS)s[k]=clamp(toInt(rs[k],DEFAULTS[k]),LIMITS[k][0],LIMITS[k][1]);
   s.volume=clamp(toInt(rs.volume,DEFAULTS.volume),0,100);
   ['autoStart','sound','vibrate','notify','wakeLock'].forEach(function(b){s[b]=typeof rs[b]==='boolean'?rs[b]:DEFAULTS[b];});
   s.theme=['system','light','dark'].indexOf(rs.theme)>=0?rs.theme:'system';
+  /* 鈴聲設定：舊資料沒有這些欄位時補預設；未知或無效的 ID 一律回退到預設鈴聲 */
+  var seenT={},cts=[];
+  (Array.isArray(rs.customTones)?rs.customTones:[]).forEach(function(c){
+    if(!c||typeof c.id!=='string'||!/^c_[a-z0-9]{3,32}$/.test(c.id)||seenT[c.id]||cts.length>=MAX_CUSTOM)return;
+    seenT[c.id]=1;
+    var nm=typeof c.name==='string'?c.name.trim().slice(0,30):'';
+    cts.push({id:c.id,name:nm||'自訂鈴聲',size:clamp(toInt(c.size,0),0,MAX_TONE_BYTES),mime:typeof c.mime==='string'?c.mime.slice(0,60):''});
+  });
+  s.customTones=cts;
+  function okTone(id){return typeof id==='string'&&(isBuiltin(id)||seenT[id]===1)?id:DEFAULT_TONE;}
+  s.tone=okTone(rs.tone);s.toneFocus=okTone(rs.toneFocus);s.toneShort=okTone(rs.toneShort);s.toneLong=okTone(rs.toneLong);
+  s.toneSame=typeof rs.toneSame==='boolean'?rs.toneSame:true;
 
   var seen={}, tasks=[];
   (Array.isArray(raw.tasks)?raw.tasks:[]).forEach(function(t){
@@ -508,9 +554,11 @@ function save(){
   try{
     localStorage.setItem(KEY,JSON.stringify(state));
     if(!storageOk){storageOk=true;if(bannerKind==='storage')setBanner(null);}
+    return true;
   }catch(e){
     storageOk=false;
     setBanner('storage','無法儲存資料（儲存空間已滿，或瀏覽器禁止網站儲存）。目前的內容在重新整理後可能消失，請先到「設定」匯出備份。');
+    return false;
   }
 }
 
@@ -533,32 +581,62 @@ function logInterrupted(reason,now){
 }
 
 function completePhase(endTs,now){
-  var t=state.timer, prev=t.mode, fresh=now-endTs<60000, next;
+  var t=state.timer, prev=t.mode, fresh=now-endTs<60000, next, skipped=false;
   if(prev==='focus'){
     var task=findTask(t.taskId||state.currentTaskId);
-    var sec=Math.round(t.planMs/1000);
-    state.log.push({id:uid(),type:'focus',start:t.startedAt||endTs-t.planMs,end:endTs,planned:sec,actual:sec,taskId:task?task.id:null,taskName:task?task.name:(t.taskName||'')});
-    if(task)task.done++;
-    state.streak++;
+    var sec=Math.round(t.planMs/1000), st0=t.startedAt||endTs-t.planMs;
+    var dup=state.log.some(function(e){return e.type==='focus'&&e.start===st0&&e.end===endTs;});   // 同一顆番茄鐘不重複記錄
+    if(!dup){
+      state.log.push({id:uid(),type:'focus',start:st0,end:endTs,planned:sec,actual:sec,taskId:task?task.id:null,taskName:task?task.name:(t.taskName||'')});
+      if(task)task.done++;
+      state.streak++;
+    }
     next=(state.streak%state.settings.cycles===0)?'long':'short';
   }else next='focus';
   state.timer=newTimer(next,state.settings);
-  if(state.settings.autoStart&&endTs+state.timer.planMs>now)beginAt(endTs);
-  announce(prev,next,endTs,fresh);
+  if(state.settings.autoStart){
+    if(endTs+state.timer.planMs>now)beginAt(endTs);
+    else if(next!=='focus'){state.timer=newTimer('focus',state.settings);skipped=true;}   // 背景期間休息也已過完：直接回到待命的專注，不補算
+  }
+  announce(prev,next,endTs,fresh,skipped);
 }
 
-function announce(prev,next,endTs,fresh){
-  var msg;
-  if(prev==='focus')msg='完成一顆番茄鐘，接著是'+MODE_NAME[next];
-  else msg=MODE_NAME[prev]+'結束，準備回到專注';
-  if(!fresh){toast(MODE_NAME[prev]+'已於 '+hhmm(endTs)+' 結束',5000);return;}
-  toast(msg,4500);
-  playChime();
+/* 完成提醒：訊息一律依「實際」計時狀態產生；鈴聲只在剛結束（60 秒內）時播放一次，錯過的不補播 */
+function announce(prev,next,endTs,fresh,skipped){
+  var auto=state.timer.status==='running',msg;
+  if(prev==='focus'){
+    msg='專注完成，一顆番茄鐘入帳！';
+    if(skipped)msg+='休息時間也已過去，回到專注。';
+    else msg+=auto?'已自動開始'+MODE_NAME[next]+'。':'接著是'+MODE_NAME[next]+'，準備好再按開始。';
+  }else{
+    msg=MODE_NAME[prev]+'結束。';
+    msg+=auto?'已自動開始專注。':'準備回到專注。';
+  }
+  if(!fresh)msg+='（'+hhmm(endTs)+' 已結束，當時頁面在背景，沒有播放鈴聲）';
+  ui.note=msg;
+  toast(msg,fresh?4500:6500);
+  if(!fresh)return;
+  playTone(toneFor(prev),{}).then(function(r){
+    if(r&&r.fallback)toast('自訂鈴聲無法讀取，已改用預設鈴聲',3500);
+    else if(r&&r.reason==='blocked')toast('iOS 暫時封鎖了網頁音效，點一下畫面即可恢復',4000);
+  });
   try{if(state.settings.vibrate&&navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}
   try{
     if(state.settings.notify&&document.hidden&&'Notification' in window&&Notification.permission==='granted')
-      new Notification('FOCUS',{body:msg,tag:'focus-phase'});
+      new Notification('番茄鐘',{body:msg,tag:'focus-phase'});
   }catch(e){}
+}
+
+/* 兩個分頁同時開著時，另一個分頁可能已先完成這個階段：改採用已儲存的狀態，避免重複記錄 */
+function adoptStoredIfAdvanced(){
+  if(!storageOk)return false;
+  try{
+    var raw=localStorage.getItem(KEY);if(!raw)return false;
+    var st=sanitize(JSON.parse(raw));if(!st)return false;
+    var a=st.timer,b=state.timer;
+    if(a.status==='running'&&a.mode===b.mode&&a.startedAt===b.startedAt)return false;
+    state=st;return true;
+  }catch(e){return false;}
 }
 
 var ticker=null;
@@ -572,6 +650,7 @@ function tick(){
     if(t.lastSeen&&now<t.lastSeen-2000)t.endAt-=(t.lastSeen-now);   // 系統時間往回調：保留剩餘時間
     t.lastSeen=now;
     if(now>=t.endAt){
+      if(adoptStoredIfAdvanced()){recomputeToday();manageTicker();manageWake();renderAll();return;}
       completePhase(t.endAt,now);
       recomputeToday();save();manageTicker();manageWake();renderAll();
       return;
@@ -583,12 +662,13 @@ function tick(){
 }
 
 function afterTimerChange(){
+  ui.note='';
   save();manageTicker();manageWake();renderTaskBlock();renderTimer(true);renderOverview();
 }
 function startTimer(){
   var t=state.timer,now=Date.now();
   if(t.status==='running')return;
-  unlockAudio();
+  unlockAudio();stopSound();warmTones();      // 在使用者手勢中啟用音訊，並預先解碼自訂鈴聲
   if(t.status==='idle'){t.remainMs=t.planMs;beginAt(now);}
   else{t.status='running';t.endAt=now+t.remainMs;t.lastSeen=now;}
   afterTimerChange();
@@ -699,6 +779,7 @@ function openSheet(html,onMount,onClose){
 }
 function closeSheet(silent){
   if(sheetBackdrop.hidden)return;
+  stopPreview();
   sheetBackdrop.hidden=true;document.body.classList.remove('lock');sheetEl.innerHTML='';
   var cb=sheetOnClose;sheetOnClose=null;
   if(!silent&&sheetReturn&&document.contains(sheetReturn))try{sheetReturn.focus({preventScroll:true});}catch(e){}
@@ -736,7 +817,7 @@ function renderTaskBlock(){
 
 function renderTimer(force){
   var now=Date.now(),t=state.timer,rem=remaining(now),secs=Math.ceil(rem/1000);
-  var key=[t.mode,t.status,secs,t.planMs,ui.today.poms,t.remainMs===t.planMs].join('|');
+  var key=[t.mode,t.status,secs,t.planMs,ui.today.poms,t.remainMs===t.planMs,ui.note].join('|');
   if(!force&&key===ui.last)return;
   ui.last=key;
   var mm=Math.floor(secs/60),ss=secs%60;
@@ -747,13 +828,13 @@ function renderTimer(force){
   $('#modeName').textContent=MODE_NAME[t.mode];
   $('#tState').textContent=t.status==='running'?'進行中':t.status==='paused'?'已暫停':'準備開始';
   $('#tCount').textContent=t.mode==='focus'?'今日第 '+(ui.today.poms+1)+' 顆番茄':'今日已完成 '+ui.today.poms+' 顆番茄';
-  $('#hint').textContent=HINT[t.mode];
+  $('#hint').textContent=(ui.note&&t.status==='idle')?ui.note:HINT[t.mode];
   var label=t.status==='running'?'暫停':t.status==='paused'?'繼續':(t.mode==='focus'?'開始專注':'開始休息');
   var bk=label+(t.status==='running'?'p':'s');
   if(bk!==ui.btnKey){ui.btnKey=bk;$('#btnMain').innerHTML=icon(t.status==='running'?'pause':'play',22)+'<span>'+label+'</span>';$('#btnMain').setAttribute('aria-label',label);}
   $('#btnReset').disabled=(t.status==='idle'&&t.remainMs===t.planMs);
-  if(t.status==='running')document.title=pad(mm)+':'+pad(ss)+' '+MODE_NAME[t.mode]+' · FOCUS';
-  else document.title=t.status==='paused'?'已暫停 '+pad(mm)+':'+pad(ss)+' · FOCUS':'FOCUS';
+  if(t.status==='running')document.title=pad(mm)+':'+pad(ss)+' '+MODE_NAME[t.mode]+' · 番茄鐘';
+  else document.title=t.status==='paused'?'已暫停 '+pad(mm)+':'+pad(ss)+' · 番茄鐘':'番茄鐘';
 }
 function renderOverview(){
   var o=ui.today,g=state.settings.goal;
@@ -922,17 +1003,26 @@ function stepRow(key,title,unit){
 function switchRow(key,title,sub){
   return '<div class="row"><div class="row-l"><div class="row-t" id="lb-'+key+'">'+title+'</div>'+(sub?'<div class="row-s" id="sub-'+key+'">'+sub+'</div>':'')+'</div><button type="button" class="switch" role="switch" data-action="switch" data-key="'+key+'" aria-labelledby="lb-'+key+'" aria-checked="false"></button></div>';
 }
+function previewTarget(){var s=state.settings;return s.toneSame?s.tone:s[STAGE_KEY[ui.toneStage]];}
 function buildSettings(){
   $('#gTimer').innerHTML=stepRow('focus','專注時間','分')+stepRow('short','短休息','分')+stepRow('long','長休息','分')+stepRow('cycles','長休息前專注','次')+
     switchRow('autoStart','自動開始下一階段','階段結束或跳過後，自動開始下一階段')+stepRow('goal','每日專注目標','顆');
   $('#gAlert').innerHTML=switchRow('sound','計時結束音效','')+
-    '<div class="row"><div class="row-l"><div class="row-t">音量</div></div><div class="vol"><input type="range" id="volume" min="0" max="100" step="5" aria-label="音量"><button type="button" class="small-btn" data-action="preview-sound">試聽</button></div></div>'+
+    '<div class="row"><div class="row-l"><div class="row-t">音量</div></div><div class="vol"><input type="range" id="volume" min="0" max="100" step="5" aria-label="音量"><button type="button" class="small-btn" data-action="preview-sound" aria-label="試聽目前鈴聲">試聽</button></div></div>'+
     (canVibrate?switchRow('vibrate','震動回饋','計時結束時震動'):'<div class="row"><div class="row-l"><div class="row-t">震動回饋</div><div class="row-s">此瀏覽器不支援網頁震動（iPhone 的 Safari 目前不支援）。</div></div></div>')+
     switchRow('notify','網頁通知','')+
-    (canWake?switchRow('wakeLock','計時時保持螢幕亮著','減少 iPhone 鎖定螢幕造成計時頁被暫停的機會，會多耗電'):'');
+    (canWake?switchRow('wakeLock','計時時保持螢幕亮著','減少 iPhone 鎖定螢幕造成計時頁被暫停的機會，會多耗電'):'<div class="row"><div class="row-l"><div class="row-t">計時時保持螢幕亮著</div><div class="row-s">此瀏覽器不支援螢幕常亮。可更新 iOS，或計時時手動保持螢幕開啟；計時本身仍以結束時間計算，不受影響。</div></div></div>');
   $('#themeSeg').innerHTML=[['system','跟隨系統'],['light','淺色'],['dark','深色']].map(function(x){return '<button type="button" role="radio" data-action="theme-opt" data-v="'+x[0]+'" aria-checked="false">'+x[1]+'</button>';}).join('');
-  $('#volume').addEventListener('input',function(e){state.settings.volume=toInt(e.target.value,60);save();});
-  $('#volume').addEventListener('change',function(){previewSound(true);});
+  $('#volume').addEventListener('input',function(e){
+    state.settings.volume=toInt(e.target.value,60);save();
+    if(cur&&cur.out){try{cur.out.gain.value=state.settings.volume/100;}catch(_){}}      // 播放中即時調整音量
+  });
+  $('#volume').addEventListener('change',function(){if(state.settings.sound&&state.settings.volume>0)previewTone(previewTarget(),true);});
+  $('#toneFile').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(f)importToneFile(f);
+    setTimeout(function(){try{e.target.value='';}catch(_){}},0);
+  });
 }
 function notifStatus(){
   if(!('Notification' in window))return {t:'此瀏覽器不支援網頁通知。計時結束後請回到本頁，畫面會顯示正確狀態。',ok:false};
@@ -981,8 +1071,9 @@ function toggleSwitch(key){
     }catch(e){afterPerm('denied');}
     return;
   }
+  if(key==='toneSame'){setToneSame(!s.toneSame);return;}
   setSetting(key,!s[key]);
-  if(key==='sound'&&s.sound)unlockAudio();
+  if(key==='sound'){if(s.sound)unlockAudio();else stopSound();renderTones();}
   if(key==='wakeLock')manageWake();
 }
 function afterPerm(p){
@@ -991,51 +1082,453 @@ function afterPerm(p){
   syncSettings();
 }
 
-/* ───────── 音效、通知、螢幕常亮 ───────── */
-var actx=null;
+/* ───────── 鈴聲引擎（Web Audio）、自訂鈴聲、螢幕常亮 ───────── */
+var actx=null, cur=null, silentDone=false, bufCache={};
+
+function isBuiltin(id){return typeof id==='string'&&Object.prototype.hasOwnProperty.call(BUILTIN,id);}
+function customById(id){var a=state&&state.settings.customTones||[];for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
+function validToneId(id){return isBuiltin(id)||customById(id)?id:DEFAULT_TONE;}
+function toneName(id){return isBuiltin(id)?BUILTIN[id].name:(customById(id)?customById(id).name:BUILTIN[DEFAULT_TONE].name);}
+function toneFor(mode){
+  var s=state.settings,id=s.toneSame?s.tone:(mode==='focus'?s.toneFocus:mode==='short'?s.toneShort:s.toneLong);
+  return validToneId(id);
+}
+
+function getCtx(){
+  if(actx)return actx;
+  var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+  try{actx=new AC();}catch(e){actx=null;}
+  return actx;
+}
+/* 只在使用者手勢（開始、試聽、選鈴聲…）中呼叫：建立／恢復 AudioContext，並播一段無聲緩衝讓 iOS 解鎖 */
 function unlockAudio(){
   if(!state.settings.sound)return;
+  var c=getCtx();if(!c)return;
   try{
-    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;actx=new AC();}
-    if(actx.state==='suspended')actx.resume();
+    if(c.state!=='running'){var p=c.resume();if(p&&p.catch)p.catch(function(){});}
+    if(!silentDone){silentDone=true;var b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0);}
   }catch(e){}
 }
-function playChime(){
-  var vol=state.settings.volume/100;
-  if(!state.settings.sound||vol<=0||!actx||actx.state!=='running')return false;
+function ensureRunning(c){
+  return new Promise(function(resolve){
+    if(c.state==='running'){resolve(true);return;}
+    var done=false;function fin(){if(done)return;done=true;resolve(c.state==='running');}
+    try{var p=c.resume();if(p&&p.then)p.then(fin,fin);else setTimeout(fin,150);}catch(e){fin();}
+    setTimeout(fin,700);
+  });
+}
+
+/* 播放工作階段：一次只會有一個；結束時淡出、停止並中斷所有節點 */
+function newSession(id,kind){return {id:id,kind:kind,srcs:[],timers:[],out:null,el:null,url:'',stopped:false};}
+function closeSession(sess){
+  if(sess.stopped)return;
+  sess.stopped=true;
+  sess.timers.forEach(clearTimeout);sess.timers=[];
+  var c=actx;
   try{
-    var t0=actx.currentTime+0.02;
-    [659.25,783.99,1046.5].forEach(function(f,i){
-      var o=actx.createOscillator(),g=actx.createGain(),st=t0+i*0.2;
-      o.type='sine';o.frequency.value=f;
-      g.gain.setValueAtTime(0.0001,st);
-      g.gain.exponentialRampToValueAtTime(Math.max(0.0002,vol*0.28),st+0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001,st+1.3);
-      o.connect(g);g.connect(actx.destination);o.start(st);o.stop(st+1.4);
+    if(sess.out&&c){var n=c.currentTime;sess.out.gain.cancelScheduledValues(n);sess.out.gain.setValueAtTime(sess.out.gain.value,n);sess.out.gain.linearRampToValueAtTime(0,n+0.03);}
+    sess.srcs.forEach(function(o){if(o&&typeof o.stop==='function'){try{o.stop(c?c.currentTime+0.04:0);}catch(e){}}});
+  }catch(e){}
+  setTimeout(function(){
+    sess.srcs.forEach(function(o){try{o.disconnect();}catch(e){}});sess.srcs=[];
+    try{if(sess.out)sess.out.disconnect();}catch(e){}sess.out=null;
+    if(sess.el){try{sess.el.onended=sess.el.onerror=null;sess.el.pause();sess.el.removeAttribute('src');sess.el.load();}catch(e){}sess.el=null;}
+    if(sess.url){try{URL.revokeObjectURL(sess.url);}catch(e){}sess.url='';}
+  },90);
+  if(cur===sess)cur=null;
+  if(sess.kind==='preview'&&ui.previewId===sess.id){ui.previewId=null;syncPreviewButtons();}
+}
+function stopSound(){if(cur)closeSession(cur);}
+function stopPreview(){if(cur&&cur.kind==='preview')closeSession(cur);}
+
+/* ── 內建鈴聲：全部由 Web Audio 合成，不依賴外部檔案 ── */
+function osc(c,dest,sess,type,f,t,dur,peak,att,sweepTo,sweepT){
+  var o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(sweepTo)o.frequency.exponentialRampToValueAtTime(sweepTo,t+(sweepT||dur));
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+att);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+0.05);
+  sess.srcs.push(o,g);
+  return o;
+}
+function lowpass(c,dest,sess,hz){var f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=hz;f.connect(dest);sess.srcs.push(f);return f;}
+function noiseBuf(c){
+  if(c._nz)return c._nz;
+  var n=Math.floor(c.sampleRate*0.3),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+  for(var i=0;i<n;i++)d[i]=Math.random()*2-1;
+  c._nz=b;return b;
+}
+var BUILTIN={
+  crisp:{name:'清脆提示音',desc:'短促明亮的兩聲「叮叮」，適合讀書',build:function(c,d,t,s){
+    osc(c,d,s,'sine',1318.5,t,0.32,0.30,0.004);osc(c,d,s,'sine',3633,t,0.10,0.06,0.003);
+    osc(c,d,s,'sine',1760,t+0.13,0.50,0.30,0.004);osc(c,d,s,'sine',4850,t+0.13,0.10,0.05,0.003);
+    return 0.75;}},
+  soft:{name:'柔和鈴聲',desc:'溫潤的鈴聲，餘韻綿長，不刺耳',build:function(c,d,t,s){
+    var lp=lowpass(c,d,s,2800),P=[[1,0.24,2.6],[2.0,0.09,1.7],[2.99,0.045,1.1],[4.17,0.02,0.7]];
+    [[0,523.25],[0.85,659.25]].forEach(function(x){P.forEach(function(p){osc(c,lp,s,'sine',x[1]*p[0],t+x[0],p[2],p[1],0.025);});});
+    return 0.85+2.65;}},
+  woodblock:{name:'木魚提示音',desc:'乾淨的木質敲擊，帶有節奏感',build:function(c,d,t,s){
+    [[0,820],[0.22,820],[0.44,820],[0.88,640],[1.1,640]].forEach(function(h){
+      var tt=t+h[0],f=h[1];
+      osc(c,d,s,'sine',f*1.3,tt,0.16,0.42,0.002,f,0.03);
+      osc(c,d,s,'triangle',f*2.4,tt,0.07,0.12,0.002);
+      var n=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();
+      n.buffer=noiseBuf(c);bp.type='bandpass';bp.frequency.value=1900;bp.Q.value=3;
+      g.gain.setValueAtTime(0.0001,tt);g.gain.exponentialRampToValueAtTime(0.2,tt+0.002);g.gain.exponentialRampToValueAtTime(0.0001,tt+0.05);
+      n.connect(bp);bp.connect(g);g.connect(d);n.start(tt);n.stop(tt+0.08);s.srcs.push(n,bp,g);
     });
-    return true;
-  }catch(e){return false;}
+    return 1.1+0.25;}},
+  triad:{name:'三音旋律',desc:'原本的三音上行提示（預設）',build:function(c,d,t,s){
+    [659.25,783.99,1046.5].forEach(function(f,i){osc(c,d,s,'sine',f,t+i*0.2,1.3,0.28,0.03);});
+    return 0.4+1.4;}},
+  nature:{name:'自然提示音',desc:'鳥鳴與水滴般的柔和聲響',build:function(c,d,t,s){
+    var lp=lowpass(c,d,s,7000);
+    function chirp(at,f0,f1,dur,pk){osc(c,lp,s,'sine',f0,t+at,dur,pk,0.012,f1,dur*0.9);}
+    chirp(0,2400,3300,0.10,0.2);chirp(0.14,2700,3700,0.10,0.2);chirp(0.28,2500,3500,0.10,0.2);
+    chirp(0.75,3100,2100,0.24,0.18);chirp(1.05,3300,2300,0.22,0.16);
+    osc(c,lp,s,'sine',520,t+1.5,0.38,0.28,0.005,1150,0.09);
+    return 1.9;}},
+  alert:{name:'強效提醒音',desc:'連續短促的嗶聲，辨識度高',build:function(c,d,t,s){
+    var lp=lowpass(c,d,s,3800);
+    [0,0.95,1.9].forEach(function(b){[988,1319,988,1319].forEach(function(f,i){
+      var tt=t+b+i*0.16,o=c.createOscillator(),g=c.createGain();
+      o.type='square';o.frequency.value=f;
+      g.gain.setValueAtTime(0,tt);g.gain.linearRampToValueAtTime(0.17,tt+0.008);g.gain.setValueAtTime(0.17,tt+0.09);g.gain.linearRampToValueAtTime(0,tt+0.12);
+      o.connect(g);g.connect(lp);o.start(tt);o.stop(tt+0.14);s.srcs.push(o,g);
+    });});
+    return 1.9+0.65;}}
+};
+var TONE_ORDER=['crisp','soft','woodblock','triad','nature','alert'];
+
+/* ── IndexedDB：自訂鈴聲的 Blob 與 metadata ── */
+var idbP=null, idbOk=true;
+function idbOpen(){
+  if(idbP)return idbP;
+  idbP=new Promise(function(resolve,reject){
+    if(!window.indexedDB){reject(new Error('no-idb'));return;}
+    var done=false,to=setTimeout(function(){if(!done){done=true;reject(new Error('timeout'));}},4000);
+    try{
+      var rq=indexedDB.open('pomodoro-tones',1);
+      rq.onupgradeneeded=function(){var db=rq.result;if(!db.objectStoreNames.contains('tones'))db.createObjectStore('tones',{keyPath:'id'});};
+      rq.onsuccess=function(){
+        if(done){try{rq.result.close();}catch(e){}return;}
+        done=true;clearTimeout(to);var db=rq.result;
+        db.onversionchange=function(){try{db.close();}catch(e){}idbP=null;};
+        resolve(db);
+      };
+      rq.onerror=function(){if(done)return;done=true;clearTimeout(to);reject(rq.error||new Error('open'));};
+    }catch(e){done=true;clearTimeout(to);reject(e);}
+  });
+  idbP.catch(function(){idbP=null;});   // 失敗後下次可重試
+  return idbP;
 }
-function previewSound(quiet){
-  if(!state.settings.sound){if(!quiet)toast('音效已關閉');return;}
+function idbTx(mode,fn){
+  return idbOpen().then(function(db){return new Promise(function(resolve,reject){
+    var tx,rq;
+    try{tx=db.transaction('tones',mode);rq=fn(tx.objectStore('tones'));}catch(e){reject(e);try{tx.abort();}catch(_){}return;}
+    tx.oncomplete=function(){resolve(rq&&'result' in rq?rq.result:undefined);};
+    tx.onerror=function(){reject(tx.error||new Error('tx'));};
+    tx.onabort=function(){reject(tx.error||new Error('abort'));};
+  });});
+}
+function idbGet(id){return idbTx('readonly',function(st){return st.get(id);});}
+
+/* ── 自訂鈴聲：解碼與播放 ── */
+function readBuf(blob){
+  if(blob.arrayBuffer)return blob.arrayBuffer();
+  return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=function(){rej(r.error);};r.readAsArrayBuffer(blob);});
+}
+function decodeAudio(c,ab){
+  return new Promise(function(res,rej){
+    var p;try{p=c.decodeAudioData(ab,res,rej);}catch(e){rej(e);return;}
+    if(p&&p.then)p.then(res,rej);
+  });
+}
+function decodeBlob(c,id,blob){
+  if(bufCache[id])return Promise.resolve(bufCache[id]);
+  return readBuf(blob).then(function(ab){return decodeAudio(c,ab);}).then(function(buf){
+    if(buf.length*buf.numberOfChannels*4<12*1024*1024)bufCache[id]=buf;   // 太大的不長駐記憶體
+    return buf;
+  });
+}
+function startBuiltin(c,sess,id){
+  var end=BUILTIN[id].build(c,sess.out,c.currentTime+0.03,sess);
+  sess.timers.push(setTimeout(function(){closeSession(sess);},(end+0.4)*1000));
+}
+function playBuffer(c,sess,buf){
+  var src=c.createBufferSource(),env=c.createGain(),dur=Math.min(buf.duration,PLAY_CAP),t0=c.currentTime+0.03;
+  src.buffer=buf;
+  env.gain.setValueAtTime(0.0001,t0);env.gain.linearRampToValueAtTime(1,t0+0.01);
+  env.gain.setValueAtTime(1,Math.max(t0+0.01,t0+dur-0.25));env.gain.linearRampToValueAtTime(0.0001,t0+dur);
+  src.connect(env);env.connect(sess.out);src.start(t0);src.stop(t0+dur+0.02);
+  sess.srcs.push(src,env);
+  sess.timers.push(setTimeout(function(){closeSession(sess);},(dur+0.4)*1000));
+}
+function playElement(c,sess,blob){   // 解碼失敗時的備援：透過 HTMLAudioElement，並接到同一個音量節點
+  return new Promise(function(resolve,reject){
+    var a=new Audio(),url=URL.createObjectURL(blob),routed=false;
+    sess.el=a;sess.url=url;a.preload='auto';a.src=url;
+    try{var ms=c.createMediaElementSource(a);ms.connect(sess.out);sess.srcs.push(ms);routed=true;}catch(e){}
+    if(!routed)try{a.volume=state.settings.volume/100;}catch(e){}
+    a.onended=function(){closeSession(sess);};
+    a.onerror=function(){reject(new Error('element'));};
+    sess.timers.push(setTimeout(function(){closeSession(sess);},PLAY_CAP*1000+300));
+    var p;try{p=a.play();}catch(e){reject(e);return;}
+    if(p&&p.then)p.then(resolve,reject);else resolve();
+  });
+}
+function startCustom(c,sess,id){
+  return idbGet(id).then(function(rec){
+    if(!rec||!rec.blob)throw new Error('missing');
+    return decodeBlob(c,id,rec.blob).then(function(buf){if(!sess.stopped)playBuffer(c,sess,buf);},function(){if(!sess.stopped)return playElement(c,sess,rec.blob);});
+  });
+}
+
+/* 統一入口：預設與自訂、提醒與試聽都走這裡；不會碰計時器、不會新增任何紀錄 */
+function playTone(id,o){
+  o=o||{};
+  stopSound();
+  var s=state.settings;
+  if(!s.sound)return Promise.resolve({ok:false,reason:'off'});
+  if(s.volume<=0)return Promise.resolve({ok:false,reason:'mute'});
+  var c=getCtx();if(!c)return Promise.resolve({ok:false,reason:'unsupported'});
+  id=validToneId(id);
+  var sess=newSession(id,o.preview?'preview':'alert');cur=sess;
+  if(o.preview){ui.previewId=id;syncPreviewButtons();}
+  return ensureRunning(c).then(function(running){
+    if(sess.stopped)return {ok:false,reason:'stopped'};
+    if(!running){closeSession(sess);return {ok:false,reason:'blocked'};}
+    sess.out=c.createGain();sess.out.gain.value=state.settings.volume/100;sess.out.connect(c.destination);
+    if(isBuiltin(id)){startBuiltin(c,sess,id);return {ok:true};}
+    return startCustom(c,sess,id).then(function(){return {ok:true};},function(){
+      if(sess.stopped)return {ok:false,reason:'stopped'};
+      closeSession(sess);
+      if(o.preview)return {ok:false,reason:'custom-failed'};
+      return playTone(DEFAULT_TONE,{}).then(function(r){r.fallback=true;return r;});
+    });
+  }).catch(function(){closeSession(sess);return {ok:false,reason:'error'};});
+}
+function warmTones(){   // 開始計時時預先解碼用到的自訂鈴聲，結束時才能立刻播
+  var c=getCtx();if(!c)return;
+  ['focus','short','long'].forEach(function(m){
+    var id=toneFor(m);
+    if(isBuiltin(id)||bufCache[id])return;
+    idbGet(id).then(function(rec){if(rec&&rec.blob)return decodeBlob(c,id,rec.blob);}).catch(function(){});
+  });
+}
+function reportPlay(r){
+  if(!r||r.ok||r.reason==='stopped')return;
+  var m={off:'音效已關閉，請先開啟「計時結束音效」',mute:'音量是 0，請先調高音量',unsupported:'此瀏覽器不支援網頁音效',
+    blocked:'iOS 暫時封鎖了網頁音效，請再點一次「試聽」（也請檢查靜音開關與音量）','custom-failed':'無法播放這個自訂鈴聲，請確認檔案格式，或刪除後重新匯入',error:'音效播放失敗'}[r.reason]||'音效播放失敗';
+  toast(m,3500);
+}
+function previewTone(id,restart){
+  if(!restart&&ui.previewId===id){stopSound();return;}
   unlockAudio();
-  setTimeout(function(){if(!playChime()&&!quiet)toast('此瀏覽器目前無法播放音效');},60);
+  playTone(id,{preview:true}).then(reportPlay);
 }
-var wl=null;
+function syncPreviewButtons(){
+  $$('[data-action="tone-preview"]').forEach(function(b){
+    var on=ui.previewId===b.dataset.id,nm=b.dataset.name||'';
+    b.textContent=on?'停止':'試聽';
+    b.setAttribute('aria-label',(on?'停止試聽':'試聽')+nm);
+  });
+}
+
+/* ── 設定頁：鈴聲選擇 ── */
+function fmtSize(n){return n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';}
+function setToneMsg(t,bad){var m=$('#toneMsg');if(!m)return;m.textContent=t||'';m.className='msg'+(bad?' bad':'');}
+function selectedToneId(){var s=state.settings;return s.toneSame?s.tone:s[STAGE_KEY[ui.toneStage]];}
+function toneRow(t,sel){
+  var on=t.id===sel,nm=esc(t.name);
+  return '<div class="tone-row"><button type="button" class="tone-pick" role="radio" aria-checked="'+on+'" data-action="tone-pick" data-id="'+esc(t.id)+'">'+
+    '<span class="tone-radio" aria-hidden="true">'+(on?icon('check',13):'')+'</span>'+
+    '<span class="tone-txt"><span class="row-t">'+nm+(t.def?' <span class="tag">預設</span>':'')+'</span><span class="row-s">'+esc(t.desc)+'</span></span>'+
+    (on?'<span class="tone-state">使用中</span>':'')+'</button>'+
+    '<button type="button" class="small-btn" data-action="tone-preview" data-id="'+esc(t.id)+'" data-name="'+nm+'" aria-label="試聽'+nm+'">試聽</button></div>'+
+    (t.custom?'<div class="tone-sub"><button type="button" class="link-btn" data-action="tone-rename" data-id="'+esc(t.id)+'" aria-label="重新命名「'+nm+'」">重新命名</button><button type="button" class="link-btn danger" data-action="tone-delete" data-id="'+esc(t.id)+'" aria-label="刪除「'+nm+'」">刪除</button></div>':'');
+}
+function renderTones(){
+  var g=$('#gTone');if(!g)return;
+  var s=state.settings,same=s.toneSame,stage=ui.toneStage,sel=selectedToneId(),h='';
+  var ae=document.activeElement,fk=(ae&&g.contains(ae)&&ae.dataset)?[ae.dataset.action,ae.dataset.id||ae.dataset.stage||'']:null;
+  if(!s.sound)h+='<div class="row"><div class="row-l"><div class="row-s"><b>「計時結束音效」已關閉</b>，目前不會播放鈴聲。可以到上方重新開啟。</div></div></div>';
+  h+='<div class="row"><div class="row-l"><div class="row-t">目前使用的鈴聲</div><div class="row-s" id="toneSummary">'+
+    (same?'所有階段：'+esc(toneName(s.tone)):['focus','short','long'].map(function(k){return STAGE_LABEL[k]+'：'+esc(toneName(s[STAGE_KEY[k]]));}).join('<br>'))+'</div></div></div>';
+  h+='<div class="row"><div class="row-l"><div class="row-t" id="lb-toneSame">所有階段使用相同鈴聲</div><div class="row-s">關閉後，可為專注、短休息、長休息分別選擇</div></div><button type="button" class="switch" role="switch" data-action="switch" data-key="toneSame" aria-labelledby="lb-toneSame" aria-checked="'+same+'"></button></div>';
+  if(!same){
+    h+='<div class="row" style="padding-top:8px;padding-bottom:8px"><div class="seg" role="radiogroup" aria-label="選擇要設定的階段" style="width:100%">'+
+      ['focus','short','long'].map(function(k){return '<button type="button" role="radio" data-action="tone-stage" data-stage="'+k+'" aria-checked="'+(k===stage)+'">'+STAGE_LABEL[k]+'</button>';}).join('')+'</div></div>';
+    h+='<div class="row"><div class="row-l"><div class="row-t">'+STAGE_LABEL[stage]+'</div><div class="row-s">目前：'+esc(toneName(sel))+'</div></div><button type="button" class="small-btn" data-action="tone-preview" data-id="'+esc(sel)+'" data-name="'+STAGE_LABEL[stage]+'鈴聲" aria-label="試聽'+STAGE_LABEL[stage]+'鈴聲">試聽</button></div>';
+  }
+  h+='<div class="tone-head" id="hdBuiltin">內建鈴聲</div><div role="radiogroup" aria-labelledby="hdBuiltin">'+
+    TONE_ORDER.map(function(id){return toneRow({id:id,name:BUILTIN[id].name,desc:BUILTIN[id].desc,def:id===DEFAULT_TONE},sel);}).join('')+'</div>';
+  h+='<div class="tone-head" id="hdCustom">自訂鈴聲</div>';
+  if(s.customTones.length)h+='<div role="radiogroup" aria-labelledby="hdCustom">'+s.customTones.map(function(c){
+    return toneRow({id:c.id,name:c.name,desc:fmtSize(c.size)+(idbOk?'':' · 目前無法讀取'),custom:true},sel);}).join('')+'</div>';
+  else h+='<div class="row"><div class="row-l"><div class="row-s">還沒有自訂鈴聲。</div></div></div>';
+  var full=s.customTones.length>=MAX_CUSTOM;
+  h+='<div class="row" style="border-top:1px solid var(--line)"><div class="row-l"><div class="row-t">匯入自訂鈴聲</div><div class="row-s">'+
+    (idbOk?'從「檔案」選擇 MP3、M4A、AAC 或 WAV。單檔上限 5 MB、長度 60 秒內，最多 '+MAX_CUSTOM+' 個。檔案只保存在這個瀏覽器，不會上傳，也不會包含在 JSON 備份中。不保證每種編碼都能播放。':'這個瀏覽器目前無法儲存自訂鈴聲（可能是私密瀏覽或限制了網站儲存空間）。內建鈴聲仍可正常使用。')+'</div></div>'+
+    '<button type="button" class="small-btn" data-action="tone-import"'+((idbOk&&!full)?'':' disabled')+' aria-label="從檔案匯入自訂鈴聲">選擇檔案</button></div>';
+  h+='<div class="row"><button type="button" class="row-btn" data-action="tone-reset">還原預設鈴聲（'+esc(BUILTIN[DEFAULT_TONE].name)+'）</button></div>';
+  g.innerHTML=h;
+  if(fk){var els=$$('[data-action]',g);for(var i=0;i<els.length;i++)if(els[i].dataset.action===fk[0]&&(els[i].dataset.id||els[i].dataset.stage||'')===fk[1]){try{els[i].focus({preventScroll:true});}catch(e){}break;}}
+  syncPreviewButtons();
+}
+function pickTone(id){
+  var s=state.settings;id=validToneId(id);
+  if(s.toneSame)s.tone=s.toneFocus=s.toneShort=s.toneLong=id;
+  else s[STAGE_KEY[ui.toneStage]]=id;
+  save();renderTones();
+  previewTone(id,true);       // 選取時順便試聽，和 iPhone 的鈴聲選單一致
+}
+function setToneSame(on){
+  var s=state.settings;
+  if(on){s.tone=s.toneFocus;s.toneFocus=s.toneShort=s.toneLong=s.tone;}
+  else{s.toneFocus=s.toneShort=s.toneLong=s.tone;}
+  s.toneSame=on;save();renderTones();
+}
+function resetTones(){
+  var s=state.settings;stopSound();
+  s.tone=s.toneFocus=s.toneShort=s.toneLong=DEFAULT_TONE;s.toneSame=true;ui.toneStage='focus';
+  save();renderTones();setToneMsg('');toast('已還原為預設鈴聲（'+BUILTIN[DEFAULT_TONE].name+'）');
+}
+
+/* 匯入自訂鈴聲 */
+var EXT_MIME={mp3:'audio/mpeg',m4a:'audio/mp4',aac:'audio/aac',wav:'audio/wav',wave:'audio/wav'};
+var MIME_ALIAS={'audio/mpeg':['audio/mpeg','audio/mp3'],'audio/mp3':['audio/mpeg','audio/mp3'],'audio/mp4':['audio/mp4','audio/x-m4a','audio/aac'],'audio/x-m4a':['audio/mp4','audio/x-m4a','audio/aac'],
+  'audio/m4a':['audio/mp4','audio/x-m4a','audio/aac'],'audio/aac':['audio/aac','audio/mp4'],'audio/wav':['audio/wav','audio/x-wav','audio/wave'],'audio/x-wav':['audio/wav','audio/x-wav','audio/wave'],'audio/wave':['audio/wav','audio/x-wav','audio/wave']};
+function canPlayMime(m){
+  try{var a=document.createElement('audio');if(!a.canPlayType)return false;
+    return (MIME_ALIAS[m]||[m]).some(function(x){return a.canPlayType(x)!=='';});}catch(e){return false;}
+}
+function probeElement(blob){   // 用 HTMLAudioElement 讀取長度；逾時就當作「無法判斷」，不阻擋後續解碼
+  return new Promise(function(resolve){
+    var a=new Audio(),url,done=false;
+    function fin(r){if(done)return;done=true;clearTimeout(to);try{a.onloadedmetadata=a.onerror=null;a.removeAttribute('src');a.load();}catch(e){}try{URL.revokeObjectURL(url);}catch(e){}resolve(r);}
+    var to=setTimeout(function(){fin({ok:false,unknown:true});},2500);
+    try{url=URL.createObjectURL(blob);a.preload='metadata';
+      a.onloadedmetadata=function(){fin({ok:true,duration:a.duration});};
+      a.onerror=function(){fin({ok:false});};a.src=url;}catch(e){fin({ok:false,unknown:true});}
+  });
+}
+function openToneFilePicker(){
+  if(!idbOk){setToneMsg('這個瀏覽器目前無法儲存自訂鈴聲，內建鈴聲仍可使用。',true);return;}
+  if(state.settings.customTones.length>=MAX_CUSTOM){setToneMsg('自訂鈴聲最多 '+MAX_CUSTOM+' 個，請先刪除一個。',true);return;}
+  var f=$('#toneFile');if(f)f.click();
+}
+var importing=false;
+function importToneFile(file){
+  var s=state.settings;
+  function fail(m){importing=false;setToneMsg(m,true);toast(m,4000);}
+  if(importing)return;
+  if(s.customTones.length>=MAX_CUSTOM)return fail('自訂鈴聲最多 '+MAX_CUSTOM+' 個，請先刪除一個。');
+  if(!file||file.size<=0)return fail('這個檔案是空的。');
+  if(file.size>MAX_TONE_BYTES)return fail('檔案太大（'+fmtSize(file.size)+'），單檔上限 5 MB。');
+  var ext=((file.name||'').match(/\.([a-z0-9]+)$/i)||[])[1];ext=ext?ext.toLowerCase():'';
+  var mime=(file.type||'').toLowerCase()||EXT_MIME[ext]||'';
+  if(mime.indexOf('audio/')!==0&&!EXT_MIME[ext])return fail('這不是支援的音訊檔，請選擇 MP3、M4A、AAC 或 WAV。');
+  var c=getCtx();
+  if(!c)return fail('此瀏覽器不支援網頁音訊，無法使用自訂鈴聲。');
+  importing=true;setToneMsg('正在檢查檔案…');
+  var unreadable=canPlayMime(mime)?'無法讀取這個音訊檔，檔案可能已損毀，或使用了這個瀏覽器不支援的編碼。':'這個瀏覽器不支援「'+(ext||mime)+'」這種音訊格式。';
+  probeElement(file).then(function(pr){
+    if(pr.ok&&isFinite(pr.duration)&&pr.duration>MAX_TONE_SECS)throw {user:'鈴聲太長（約 '+Math.round(pr.duration)+' 秒），請選擇 '+MAX_TONE_SECS+' 秒以內的檔案。'};
+    return readBuf(file).then(function(ab){
+      return decodeAudio(c,ab).then(function(buf){
+        if(buf.duration>MAX_TONE_SECS)throw {user:'鈴聲太長（約 '+Math.round(buf.duration)+' 秒），請選擇 '+MAX_TONE_SECS+' 秒以內的檔案。'};
+      },function(){
+        if(!pr.ok)throw {user:unreadable};     // 解碼與載入都失敗
+      });
+    });
+  }).then(function(){
+    var id='c_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6).replace(/[^a-z0-9]/g,'x');
+    var name=(file.name||'自訂鈴聲').replace(/\.[a-z0-9]+$/i,'').trim().slice(0,30)||'自訂鈴聲';
+    var rec={id:id,name:name,size:file.size,type:mime,added:Date.now(),blob:file.slice(0,file.size,file.type||mime)};
+    return idbTx('readwrite',function(st){return st.put(rec);}).then(function(){return rec;},function(){throw {user:'儲存失敗：可能是儲存空間不足，或瀏覽器不允許網站儲存檔案。內建鈴聲不受影響。'};});
+  }).then(function(rec){
+    importing=false;
+    s.customTones.push({id:rec.id,name:rec.name,size:rec.size,mime:rec.type});
+    var ok=save();
+    renderTones();
+    if(ok){setToneMsg('已匯入「'+rec.name+'」。點選它即可使用，也可以先試聽。');toast('已匯入自訂鈴聲');}
+    else setToneMsg('「'+rec.name+'」的檔案已存入，但設定無法儲存，重新整理後仍會自動找回。',true);
+  }).catch(function(err){fail(err&&err.user?err.user:unreadable);});
+}
+function renameTone(id){
+  var c=customById(id);if(!c)return;
+  openSheet('<h2 id="sheetTitle">重新命名鈴聲</h2><form id="rnf" novalidate><label class="fld" for="rnName">鈴聲名稱</label><input class="input" id="rnName" maxlength="30" autocomplete="off" enterkeyhint="done" data-autofocus><p class="err" id="rnErr" hidden>請輸入名稱。</p><div class="sheet-actions"><button type="button" class="btn ghost" data-sheet-close>取消</button><button type="submit" class="btn primary">儲存</button></div></form>',
+    function(root){
+      var inp=$('#rnName',root);inp.value=c.name;
+      $('#rnf',root).addEventListener('submit',function(e){
+        e.preventDefault();
+        var n=inp.value.trim().slice(0,30);
+        if(!n){$('#rnErr',root).hidden=false;inp.focus();return;}
+        c.name=n;save();
+        idbTx('readwrite',function(st){var rq=st.get(id);rq.onsuccess=function(){var r=rq.result;if(r){r.name=n;st.put(r);}};return rq;}).catch(function(){});
+        closeSheet();renderTones();toast('已重新命名');
+      });
+    });
+}
+function deleteTone(id){
+  var c=customById(id);if(!c)return;
+  var s=state.settings,inUse=['tone','toneFocus','toneShort','toneLong'].some(function(k){return s[k]===id;});
+  confirmSheet({title:'刪除自訂鈴聲？',body:'「'+c.name+'」會從這個瀏覽器移除。'+(inUse?'目前使用它的階段會改回預設鈴聲（'+BUILTIN[DEFAULT_TONE].name+'）。':'')+'此動作無法復原。',okText:'刪除',danger:true}).then(function(ok){
+    if(!ok)return;
+    stopSound();
+    ['tone','toneFocus','toneShort','toneLong'].forEach(function(k){if(s[k]===id)s[k]=DEFAULT_TONE;});   // 先切回預設，再刪檔案
+    save();delete bufCache[id];
+    function dropMeta(){s.customTones=s.customTones.filter(function(x){return x.id!==id;});save();renderTones();}
+    idbTx('readwrite',function(st){return st['delete'](id);}).then(function(){dropMeta();setToneMsg('');toast('已刪除自訂鈴聲');},
+      function(){dropMeta();setToneMsg('已從清單移除，但瀏覽器沒有回應刪除要求，檔案可能仍留在儲存空間。',true);});
+  });
+}
+/* 啟動時核對 IndexedDB 與設定：補回孤立的檔案，清掉已不存在的項目 */
+function reconcileTones(){
+  return idbTx('readonly',function(st){return st.getAll();}).then(function(recs){
+    idbOk=true;
+    var s=state.settings,have={},changed=false;
+    (recs||[]).forEach(function(r){if(r&&typeof r.id==='string')have[r.id]=r;});
+    var lost=s.customTones.filter(function(c){return !have[c.id];});
+    if(lost.length){
+      lost.forEach(function(c){['tone','toneFocus','toneShort','toneLong'].forEach(function(k){if(s[k]===c.id)s[k]=DEFAULT_TONE;});});
+      s.customTones=s.customTones.filter(function(c){return have[c.id];});
+      changed=true;setToneMsg('找不到 '+lost.length+' 個自訂鈴聲的檔案（可能已被瀏覽器清除），相關設定已改回預設鈴聲。',true);
+    }
+    (recs||[]).forEach(function(r){
+      if(!r||!/^c_[a-z0-9]{3,32}$/.test(r.id)||s.customTones.length>=MAX_CUSTOM)return;
+      if(s.customTones.some(function(c){return c.id===r.id;}))return;
+      s.customTones.push({id:r.id,name:String(r.name||'自訂鈴聲').slice(0,30),size:clamp(toInt(r.size,0),0,MAX_TONE_BYTES),mime:String(r.type||'').slice(0,60)});changed=true;
+    });
+    if(changed)save();
+    renderTones();
+  },function(){idbOk=false;renderTones();});
+}
+
+/* ── 螢幕常亮 ── */
+var wl=null, wlBusy=false, wlWarned=false;
 function manageWake(){
   if(!canWake)return;
   var want=state.settings.wakeLock&&state.timer.status==='running'&&!document.hidden;
-  if(want&&!wl){
-    try{navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){wl=null;});},function(){});}catch(e){}
+  if(want&&!wl&&!wlBusy){
+    wlBusy=true;
+    try{navigator.wakeLock.request('screen').then(function(l){wlBusy=false;wl=l;l.addEventListener('release',function(){wl=null;});},
+      function(){wlBusy=false;if(!wlWarned){wlWarned=true;toast('無法保持螢幕亮著（可能是省電模式），計時不受影響',3500);}});}
+    catch(e){wlBusy=false;}
   }else if(!want&&wl){try{wl.release();}catch(e){}wl=null;}
 }
 
 /* ───────── 備份：匯出、匯入、清除 ───────── */
 function exportText(){
-  return JSON.stringify({app:'focus',v:1,exportedAt:Date.now(),settings:state.settings,tasks:state.tasks,doneLog:state.doneLog,log:state.log,currentTaskId:state.currentTaskId,streak:state.streak},null,1);
+  var ex=Object.assign({},state.settings);delete ex.customTones;      // 自訂鈴聲的音訊檔不放進備份
+  ['tone','toneFocus','toneShort','toneLong'].forEach(function(k){if(!isBuiltin(ex[k]))ex[k]=DEFAULT_TONE;});
+  return JSON.stringify({app:'focus',v:1,exportedAt:Date.now(),settings:ex,tasks:state.tasks,doneLog:state.doneLog,log:state.log,currentTaskId:state.currentTaskId,streak:state.streak},null,1);
 }
 function openExport(){
-  openSheet('<h2 id="sheetTitle">匯出備份</h2><p class="sheet-body">包含設定、任務與全部專注紀錄。</p><textarea class="input" id="exText" rows="6" readonly spellcheck="false" aria-label="備份內容"></textarea>'+
+  openSheet('<h2 id="sheetTitle">匯出備份</h2><p class="sheet-body">包含設定、任務與全部專注紀錄。</p><p class="note" style="margin:-8px 0 12px">'+(state.settings.customTones.length?'自訂鈴聲的音訊檔只存在這個瀏覽器，不會放進備份；正在使用自訂鈴聲的階段，備份中會記為預設鈴聲。換手機或清除網站資料後，請重新匯入音訊檔。':'內建鈴聲的選擇會一併備份。自訂鈴聲的音訊檔不會放進備份。')+'</p><textarea class="input" id="exText" rows="6" readonly spellcheck="false" aria-label="備份內容"></textarea>'+
     '<div class="sheet-actions"><button type="button" class="btn ghost" id="exCopy">複製</button><button type="button" class="btn primary" id="exDl">下載檔案</button></div><p class="msg" id="exMsg" role="status"></p><div class="sheet-actions" style="margin-top:4px"><button type="button" class="btn ghost" data-sheet-close>關閉</button></div>',
     function(root){
       var ta=$('#exText',root),msg=$('#exMsg',root),text=exportText();ta.value=text;
@@ -1051,7 +1544,7 @@ function openExport(){
       $('#exDl',root).addEventListener('click',function(){
         try{
           var url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');
-          a.href=url;a.download='focus-backup-'+dayKey(Date.now())+'.json';document.body.appendChild(a);a.click();a.remove();
+          a.href=url;a.download='番茄鐘-backup-'+dayKey(Date.now())+'.json';document.body.appendChild(a);a.click();a.remove();
           setTimeout(function(){URL.revokeObjectURL(url);},4000);
           msg.textContent='已送出下載。如果沒有出現檔案，請改用「複製」。';
         }catch(e){msg.textContent='此環境無法下載，請改用「複製」。';}
@@ -1059,7 +1552,7 @@ function openExport(){
     });
 }
 function openImport(){
-  openSheet('<h2 id="sheetTitle">匯入備份</h2><p class="sheet-body">匯入會取代目前所有資料，進行中的計時會被重設。</p>'+
+  openSheet('<h2 id="sheetTitle">匯入備份</h2><p class="sheet-body">匯入會取代目前所有資料，進行中的計時會被重設。這個瀏覽器已匯入的自訂鈴聲檔案會保留。</p>'+
     '<label class="btn ghost block" for="imFile" tabindex="0">選擇 JSON 檔案</label><input type="file" id="imFile" class="sr" accept=".json,application/json">'+
     '<label class="fld" for="imText">或貼上備份內容</label><textarea class="input" id="imText" rows="5" spellcheck="false" placeholder="{ &quot;app&quot;: &quot;focus&quot;, … }"></textarea><p class="err" id="imErr" hidden></p>'+
     '<div class="sheet-actions"><button type="button" class="btn ghost" data-sheet-close>取消</button><button type="button" class="btn primary" id="imGo">匯入</button></div>',
@@ -1073,24 +1566,28 @@ function openImport(){
       $('#imGo',root).addEventListener('click',function(){
         var parsed=null;
         try{parsed=JSON.parse(ta.value);}catch(e){err.textContent='內容不是有效的 JSON。';err.hidden=false;return;}
-        if(!parsed||parsed.app!=='focus'){err.textContent='這不是 FOCUS 的備份檔。';err.hidden=false;return;}
+        if(!parsed||parsed.app!=='focus'){err.textContent='這不是番茄鐘的備份檔。';err.hidden=false;return;}
         var st=sanitize(parsed);
         if(!st){err.textContent='備份內容無法讀取。';err.hidden=false;return;}
         closeSheet();
         confirmSheet({title:'取代目前資料？',body:'備份內有 '+st.tasks.length+' 個任務、'+st.log.filter(function(e){return e.type==='focus';}).length+' 顆番茄鐘紀錄。匯入後，目前的資料會被取代。',okText:'匯入',danger:true}).then(function(ok){
           if(!ok)return;
           st.timer=newTimer('focus',st.settings);
+          st.settings.customTones=state.settings.customTones.slice();   // 自訂鈴聲檔案在本機，保留清單；備份內若指向自訂鈴聲已被回退到預設
+          stopSound();ui.note='';
           state=st;recomputeToday();save();manageTicker();manageWake();applyTheme();buildSettingsSync();renderAll();toast('已匯入備份');
         });
       });
     });
 }
 function clearAll(){
-  confirmSheet({title:'清除所有資料？',body:'任務、設定與全部專注紀錄都會從這個瀏覽器移除。建議先匯出備份。',okText:'繼續',danger:true}).then(function(ok){
+  confirmSheet({title:'清除所有資料？',body:'任務、設定、全部專注紀錄與已匯入的自訂鈴聲都會從這個瀏覽器移除。建議先匯出備份。',okText:'繼續',danger:true}).then(function(ok){
     if(!ok)return;
     return confirmSheet({title:'再確認一次',body:'這個動作無法復原。確定要永久清除所有資料嗎？',okText:'永久清除',danger:true}).then(function(ok2){
       if(!ok2)return;
       try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'.corrupt');}catch(e){}
+      stopSound();bufCache={};ui.note='';ui.toneStage='focus';setToneMsg('');
+      idbTx('readwrite',function(st){return st.clear();}).catch(function(){});
       state=defaultState();recomputeToday();manageTicker();manageWake();applyTheme();ui.filter='open';save();renderAll();toast('已清除所有資料');
     });
   });
@@ -1103,14 +1600,16 @@ function renderAll(){
   if(ui.page==='tasks')renderTasks();
   if(ui.page==='stats')renderStats();
   syncSettings();
+  if(ui.page==='settings')renderTones();
 }
 function showPage(p){
+  if(p!=='settings')stopPreview();
   ui.page=p;
   $$('.page').forEach(function(s){s.hidden=s.id!=='page-'+p;});
   $$('.nav button').forEach(function(b){if(b.dataset.page===p)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   if(p==='tasks')renderTasks();
   if(p==='stats')renderStats();
-  if(p==='settings')syncSettings();
+  if(p==='settings'){syncSettings();renderTones();}
   window.scrollTo(0,0);
 }
 
@@ -1154,7 +1653,14 @@ document.addEventListener('click',function(e){
     case 'step':if(e.detail===0)stepSetting(el.dataset.key,+el.dataset.dir);break;   // 觸控由 pointerdown 處理，這裡只接鍵盤
     case 'switch':toggleSwitch(el.dataset.key);break;
     case 'theme-opt':setSetting('theme',el.dataset.v);applyTheme();renderHeader();break;
-    case 'preview-sound':previewSound(false);break;
+    case 'preview-sound':previewTone(previewTarget(),false);break;
+    case 'tone-pick':pickTone(id);break;
+    case 'tone-preview':previewTone(id,false);break;
+    case 'tone-stage':ui.toneStage=el.dataset.stage;renderTones();break;
+    case 'tone-import':openToneFilePicker();break;
+    case 'tone-rename':renameTone(id);break;
+    case 'tone-delete':deleteTone(id);break;
+    case 'tone-reset':resetTones();break;
     case 'export':openExport();break;
     case 'import':openImport();break;
     case 'clear':clearAll();break;
@@ -1166,12 +1672,15 @@ document.addEventListener('click',function(e){
 var holdT=null,holdI=null;
 function stopHold(){clearTimeout(holdT);clearInterval(holdI);holdT=holdI=null;}
 document.addEventListener('pointerdown',function(e){
-  unlockAudio();
   var b=e.target.closest('[data-action="step"]');if(!b||b.disabled)return;
   var key=b.dataset.key,dir=+b.dataset.dir;
   stepSetting(key,dir);stopHold();
   holdT=setTimeout(function(){holdI=setInterval(function(){stepSetting(key,dir);},90);},420);
 });
+/* 重新整理後計時仍在進行：第一次觸碰時恢復音訊（iOS 要求使用者手勢），其餘情況不會自動啟用 */
+function resumeAudioIfRunning(){if(state.timer.status==='running'&&state.settings.sound&&(!actx||actx.state!=='running'))unlockAudio();}
+document.addEventListener('click',resumeAudioIfRunning,true);
+document.addEventListener('touchend',resumeAudioIfRunning,{capture:true,passive:true});
 ['pointerup','pointercancel','pointerleave','blur'].forEach(function(ev){document.addEventListener(ev,stopHold,true);});
 
 document.addEventListener('keydown',function(e){
@@ -1181,7 +1690,7 @@ document.addEventListener('keydown',function(e){
 });
 
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){save();manageWake();}
+  if(document.hidden){save();stopPreview();manageWake();}
   else{tick();manageWake();renderHeader();}
 });
 window.addEventListener('pageshow',function(){tick();});
@@ -1207,6 +1716,9 @@ if(window.matchMedia){
   renderAll();
   tick();manageTicker();manageWake();
   save();
+  renderTones();
+  reconcileTones();
+  if(state.timer.status==='running'&&state.settings.sound)toast('計時已恢復。點一下畫面即可啟用結束時的鈴聲',3800);
 })();
 })();
 </script>
