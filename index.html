@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FOCUS">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>FOCUS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+/* Layout: 單欄手機優先。頂部標誌列 → 頁面內容 → 固定底部導覽；計時環是專注頁唯一的視覺重心。 */
+:root{
+  --bg:#F8F7F3;
+  --fg:#252522;
+  --muted:#85847E;
+  --muted-strong:#6B6A64;
+  --accent:#C96A58;
+  --accent-text:#A94E3E;
+  --accent-soft:#E6BDB3;
+  --on-accent:#FFFFFF;
+  --danger:#B5483A;
+  --break:#6E8C80;
+  --card:#FFFFFF;
+  --line:#E9E7E0;
+  --seg:#EFEDE6;
+  --shadow:0 1px 2px rgba(37,37,34,.04),0 8px 24px -16px rgba(37,37,34,.16);
+  --scrim:rgba(24,24,22,.40);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1C1C1A;--fg:#ECEAE4;--muted:#98968E;--muted-strong:#B2B0A8;
+    --accent:#D98672;--accent-text:#E59A87;--accent-soft:#6A433B;--on-accent:#1C1C1A;--danger:#E08F7E;
+    --break:#8DAA9D;--card:#252523;--line:#363633;--seg:#2B2B28;
+    --shadow:0 0 0 rgba(0,0,0,0);--scrim:rgba(0,0,0,.58);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C1C1A;--fg:#ECEAE4;--muted:#98968E;--muted-strong:#B2B0A8;
+  --accent:#D98672;--accent-text:#E59A87;--accent-soft:#6A433B;--on-accent:#1C1C1A;--danger:#E08F7E;
+  --break:#8DAA9D;--card:#252523;--line:#363633;--seg:#2B2B28;
+  --shadow:0 0 0 rgba(0,0,0,0);--scrim:rgba(0,0,0,.58);color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--font);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+body.lock{overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+#app{max-width:520px;margin:0 auto;padding-block:4px calc(100px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* banner */
+.banner{display:flex;gap:12px;align-items:flex-start;margin:8px 0 0;padding:12px 14px;border:1px solid var(--accent);border-radius:12px;font-size:14px;line-height:1.5;background:var(--card)}
+.banner p{margin:0;flex:1;min-width:0}
+.banner button{min-height:44px;min-width:44px;border:0;background:none;color:var(--accent-text);font-weight:600;padding:0 4px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;min-height:60px;gap:8px}
+.brand{display:flex;flex-direction:column;gap:1px;min-width:0}
+.logo{font-weight:650;font-size:15px;letter-spacing:.3em}
+.dateline{font-size:12.5px;color:var(--muted-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{display:flex;gap:2px}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--muted-strong);display:grid;place-items:center;transition:background .15s,transform .1s}
+.icon-btn:active{background:var(--seg);transform:scale(.94)}
+.ic{display:block}
+
+h1.page-title{font-size:26px;font-weight:600;letter-spacing:.01em;margin:8px 0 16px;line-height:1.25}
+h2.sec{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--muted-strong);margin:28px 4px 8px}
+
+/* focus page: task */
+.task-block{text-align:center;padding:8px 8px 0;min-height:112px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.t-label{font-size:13px;color:var(--muted-strong);letter-spacing:.06em}
+.t-name{font-size:20px;font-weight:600;line-height:1.35;max-width:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t-name.empty{font-weight:500;color:var(--fg)}
+.t-sub{font-size:13px;color:var(--muted-strong)}
+.t-actions{display:flex;gap:4px;margin-top:2px;flex-wrap:wrap;justify-content:center}
+.link-btn{min-height:44px;padding:0 14px;border:0;background:none;color:var(--accent-text);font-size:15px;font-weight:600;border-radius:12px;transition:background .15s}
+.link-btn:active{background:var(--seg)}
+
+/* timer */
+.timer{--ring:300px;--ring:min(76vw,42vh,320px);--ring:min(76vw,42dvh,320px);position:relative;width:var(--ring);height:var(--ring);margin:8px auto 0}
+.timer svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.timer .track{fill:none;stroke:var(--line);stroke-width:1.6}
+.timer .bar{fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .3s}
+.timer[data-mode="short"] .bar,.timer[data-mode="long"] .bar{stroke:var(--break)}
+.timer-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.mode{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:.12em;color:var(--muted-strong)}
+.mode i{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.timer[data-mode="short"] .mode i,.timer[data-mode="long"] .mode i{background:var(--break)}
+.digits{display:flex;align-items:baseline;justify-content:center;font-size:calc(var(--ring)*.25);font-weight:300;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap}
+.digits.wide{font-size:calc(var(--ring)*.2)}
+.digits span{display:inline-block;text-align:center}
+.digits .colon{width:.32em;transform:translateY(-.06em)}
+.t-count{font-size:14px;color:var(--muted-strong)}
+.state{font-size:12.5px;color:var(--muted-strong);letter-spacing:.08em}
+.hint{text-align:center;color:var(--muted-strong);font-size:14px;margin:14px 0 0;letter-spacing:.04em}
+
+/* controls */
+.controls{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;margin:16px 0 0}
+.side-btn{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:64px;min-height:64px;border:0;background:none;color:var(--muted-strong);font-size:12px;padding:4px 0;border-radius:14px;transition:opacity .15s,transform .1s}
+.side-btn .disc{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;box-shadow:var(--shadow);transition:background .15s}
+.side-btn:active:not(:disabled){transform:scale(.95)}
+.side-btn:active:not(:disabled) .disc{background:var(--seg)}
+.side-btn:disabled{opacity:.4}
+.primary-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:168px;height:64px;padding:0 28px;border:0;border-radius:32px;background:var(--accent);color:var(--on-accent);font-size:18px;font-weight:600;letter-spacing:.06em;box-shadow:0 10px 24px -14px var(--accent);transition:transform .1s,filter .15s}
+.primary-btn:active{transform:scale(.97);filter:brightness(.94)}
+.primary-btn:focus-visible{outline-color:var(--fg)}
+
+/* today strip */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);margin:24px 0 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.strip>div{padding:14px 8px;text-align:center;min-width:0}
+.strip>div+div{border-left:1px solid var(--line)}
+.strip b{display:block;font-size:22px;font-weight:500;line-height:1.2}
+.strip b small{font-size:13px;font-weight:400;color:var(--muted-strong);margin-left:2px}
+.strip span{display:block;font-size:12px;color:var(--muted-strong);margin-top:2px}
+
+/* seg + chips */
+.seg{display:flex;background:var(--seg);border-radius:12px;padding:3px;gap:2px}
+.seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted-strong);font-size:14px;font-weight:500;padding:0 6px;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"],.seg button[aria-checked="true"]{background:var(--card);color:var(--fg);box-shadow:var(--shadow);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);font-size:15px;transition:background .15s,color .15s}
+.chip[aria-checked="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.chip:active{transform:scale(.97)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:14px;border:1px solid transparent;font-size:16px;font-weight:600;transition:transform .1s,filter .15s,background .15s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.danger{background:var(--danger);color:var(--on-accent)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--fg)}
+.btn.ghost:active{background:var(--seg)}
+.btn.block{width:100%}
+
+/* tasks page */
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 16px}
+.page-head h1{margin:0}
+.task-list{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.task{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 8px 0 4px}
+.task-top{display:flex;gap:2px;align-items:flex-start}
+.check{flex:none;width:44px;height:44px;border:0;background:none;display:grid;place-items:center;color:var(--on-accent)}
+.check .box{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center;transition:background .15s,border-color .15s}
+.check[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent)}
+.check:active .box{transform:scale(.92)}
+.task-main{flex:1;min-width:0;padding:10px 4px 8px 0}
+.task-name{font-size:16.5px;font-weight:600;overflow-wrap:anywhere;line-height:1.4}
+.task.is-done .task-name{color:var(--muted-strong);text-decoration:line-through;text-decoration-thickness:1px}
+.task-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px;font-size:13px;color:var(--muted-strong)}
+.tag{padding:1px 8px;border-radius:999px;background:var(--seg);font-size:12px}
+.cur{color:var(--accent-text);font-weight:600}
+.meter{height:3px;border-radius:2px;background:var(--line);margin-top:10px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.task-actions{display:flex;justify-content:flex-end;gap:0;margin:0 -4px 0 0;border-top:1px solid var(--line)}
+.task-actions button{min-height:44px;padding:0 14px;border:0;background:none;font-size:14px;font-weight:500;color:var(--muted-strong);display:inline-flex;align-items:center;gap:6px;border-radius:10px}
+.task-actions button.go{color:var(--accent-text);font-weight:600;margin-right:auto}
+.task-actions button:active{background:var(--seg)}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted-strong)}
+.empty-state h3{margin:0 0 6px;font-size:18px;font-weight:600;color:var(--fg)}
+.empty-state p{margin:0 0 18px;font-size:14.5px}
+
+/* stats */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum div{min-width:0}
+.sum b{display:block;font-size:26px;font-weight:500;line-height:1.2}
+.sum b small{font-size:13px;font-weight:400;color:var(--muted-strong);margin-left:2px}
+.sum span{font-size:12.5px;color:var(--muted-strong)}
+.goal{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.goal-top{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted-strong)}
+.goal-top b{color:var(--fg);font-weight:600}
+.pbar{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .4s}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.chart-head h3{margin:0;font-size:15px;font-weight:600}
+.chart-head .seg{width:150px}
+.plot{position:relative;display:flex;height:120px;margin-top:22px;border-bottom:1px solid var(--line)}
+.col{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center}
+.col .b{display:block;width:56%;max-width:28px;border-radius:5px 5px 0 0;background:var(--accent-soft);min-height:2px}
+.col .b.hit{background:var(--accent)}
+.col .b.zero{background:var(--line)}
+.col .v{position:absolute;font-size:12px;color:var(--muted-strong);transform:translateY(-4px);line-height:1}
+.gl{position:absolute;left:0;right:0;border-top:1px dashed var(--muted);opacity:.7;pointer-events:none}
+.labs{display:flex;margin-top:6px}
+.labs span{flex:1;text-align:center;font-size:12.5px;color:var(--muted-strong)}
+.labs span.today{color:var(--accent-text);font-weight:700}
+.note{font-size:13px;color:var(--muted-strong);margin:12px 0 0;line-height:1.55}
+.bars{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.bars li{min-width:0}
+.bars .r{display:flex;justify-content:space-between;gap:12px;font-size:14.5px}
+.bars .r span:first-child{min-width:0;overflow-wrap:anywhere}
+.bars .r span:last-child{color:var(--muted-strong);white-space:nowrap}
+
+/* settings */
+.group{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;min-height:56px}
+.row+.row{border-top:1px solid var(--line)}
+.row-l{min-width:0;flex:1}
+.row-t{font-size:16px}
+.row-s{font-size:12.5px;color:var(--muted-strong);line-height:1.45;margin-top:2px}
+.stepper{display:flex;align-items:center;gap:2px}
+.stepper output{min-width:34px;text-align:center;font-size:17px;font-weight:500}
+.stepper .unit{font-size:13px;color:var(--muted-strong);width:20px}
+.step{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:20px;line-height:1;display:grid;place-items:center;touch-action:manipulation;transition:background .15s,transform .1s}
+.step:active:not(:disabled){background:var(--seg);transform:scale(.94)}
+.step:disabled{opacity:.35}
+.switch{flex:none;position:relative;width:52px;height:32px;border-radius:16px;border:0;background:var(--line);transition:background .2s;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.switch::before{content:"";position:absolute;inset:-7px -4px}
+.switch:disabled{opacity:.4}
+.vol{display:flex;align-items:center;gap:10px;flex:1;max-width:210px}
+.vol input{flex:1;min-width:0;accent-color:var(--accent);height:44px}
+.row-btn{width:100%;text-align:left;background:none;border:0;padding:0;min-height:36px;font-size:16px;display:flex;align-items:center;justify-content:space-between}
+.row-btn.danger{color:var(--danger);font-weight:600}
+.small-btn{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:14px;font-weight:600}
+.small-btn:active{background:var(--seg)}
+details.about{margin:20px 4px 0;font-size:13px;color:var(--muted-strong);line-height:1.65}
+details.about summary{min-height:44px;display:flex;align-items:center;font-weight:600;cursor:pointer}
+details.about p{margin:0 0 10px}
+
+/* nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);padding:4px max(8px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(8px,env(safe-area-inset-left,0px))}
+.nav-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{min-height:56px;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:500;border-radius:12px;transition:color .15s}
+.nav button[aria-current="page"]{color:var(--accent-text)}
+.nav button:active{background:var(--seg)}
+.nav button[aria-current="page"] .ic{stroke-width:2}
+.nav button:not([aria-current="page"]){color:var(--muted-strong)}
+
+/* sheet + toast */
+.backdrop{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+.sheet{width:100%;max-width:520px;max-height:90vh;max-height:90dvh;overflow:auto;overscroll-behavior:contain;background:var(--card);border-radius:22px 22px 0 0;padding:22px max(20px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.sheet h2{margin:0 0 6px;font-size:20px;font-weight:600}
+.sheet-body{margin:0 0 18px;color:var(--muted-strong);font-size:15px;line-height:1.6}
+.sheet-actions{display:flex;gap:10px;margin-top:20px}
+.sheet-actions .btn{flex:1}
+.fld{display:block;font-size:13px;color:var(--muted-strong);margin:16px 0 6px}
+.input,textarea.input{width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:10px 14px;font-size:16px;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s}
+textarea.input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:16px;line-height:1.45;resize:vertical}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.input[aria-invalid="true"]{border-color:var(--danger)}
+.err{color:var(--danger);font-size:13px;margin:6px 0 0}
+.msg{font-size:13px;color:var(--muted-strong);margin:10px 0 0;min-height:1.4em}
+fieldset{border:0;padding:0;margin:0}
+legend{padding:0}
+.est{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.pick{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+.pick button{width:100%;min-height:56px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);background:transparent}
+.pick button[aria-checked="true"]{border-color:var(--accent);background:var(--bg)}
+.pick button:active{background:var(--seg)}
+.pick .pn{font-weight:600;overflow-wrap:anywhere}
+.pick .ps{font-size:12.5px;color:var(--muted-strong)}
+.toast{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;justify-content:center;padding:0 16px;pointer-events:none}
+.toast span{max-width:min(92vw,420px);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:14px;line-height:1.4;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;text-align:center}
+.toast.show span{opacity:1;transform:none}
+
+@media (max-height:700px){
+  .top{min-height:52px}
+  .task-block{min-height:96px;padding-top:0}
+  .timer{--ring:min(72vw,39vh,300px);--ring:min(72vw,39dvh,300px);margin-top:4px}
+  .hint{margin-top:8px}
+  .controls{margin-top:8px}
+  .strip{margin-top:16px}
+}
+@media (max-height:600px){
+  .timer{--ring:min(62vw,33vh,240px);--ring:min(62vw,33dvh,240px)}
+  .t-sub{display:none}
+  .task-block{min-height:78px}
+  .t-name{font-size:18px}
+  .mode,.t-count{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div id="app">
+  <div id="banner" class="banner" role="status" hidden><p id="bannerText"></p><button type="button" data-action="banner-dismiss">知道了</button></div>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">FOCUS</span>
+      <span class="dateline" id="dateLine"></span>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="icon-btn" id="themeBtn" data-action="toggle-theme" aria-label="切換深色模式"></button>
+      <button type="button" class="icon-btn" data-action="nav" data-page="settings" aria-label="設定"><span data-icon="sliders"></span></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="page-focus" class="page" aria-label="專注">
+      <h1 class="sr">專注</h1>
+      <div class="task-block" id="taskBlock"></div>
+
+      <div class="timer" id="timer" data-mode="focus">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="track" cx="100" cy="100" r="94"/>
+          <circle class="bar" id="ring" cx="100" cy="100" r="94" stroke-dasharray="590.62" stroke-dashoffset="590.62"/>
+        </svg>
+        <div class="timer-in" role="timer" aria-label="倒數計時">
+          <div class="mode"><i></i><span id="modeName">專注</span></div>
+          <div class="digits" id="digits"><span id="tMin">25</span><span class="colon">:</span><span id="tSec">00</span></div>
+          <div class="t-count" id="tCount"></div>
+          <div class="state" id="tState"></div>
+        </div>
+      </div>
+      <p class="hint" id="hint"></p>
+
+      <div class="controls">
+        <button type="button" class="side-btn" id="btnReset" data-action="reset" aria-label="重設目前階段"><span class="disc" data-icon="reset"></span><span>重設</span></button>
+        <button type="button" class="primary-btn" id="btnMain" data-action="toggle-timer"></button>
+        <button type="button" class="side-btn" id="btnSkip" data-action="skip" aria-label="跳過此階段"><span class="disc" data-icon="skip"></span><span>跳過</span></button>
+      </div>
+
+      <div class="strip" aria-label="今日概覽">
+        <div><b class="num" id="ovPoms">0</b><span id="ovPomsL">今日番茄鐘</span></div>
+        <div><b class="num" id="ovMins">0<small>分</small></b><span>專注時間</span></div>
+        <div><b class="num" id="ovDone">0</b><span>完成任務</span></div>
+      </div>
+    </section>
+
+    <section id="page-tasks" class="page" aria-label="任務" hidden>
+      <div class="page-head">
+        <h1 class="page-title">任務</h1>
+        <button type="button" class="btn primary" data-action="new-task"><span data-icon="plus" data-size="18"></span>新增</button>
+      </div>
+      <div class="seg" id="taskFilter" role="group" aria-label="篩選任務"></div>
+      <div id="taskList"></div>
+    </section>
+
+    <section id="page-stats" class="page" aria-label="統計" hidden>
+      <h1 class="page-title">統計</h1>
+      <div class="seg" id="rangeSeg" role="group" aria-label="統計範圍"></div>
+      <div id="statsBody"></div>
+    </section>
+
+    <section id="page-settings" class="page" aria-label="設定" hidden>
+      <h1 class="page-title">設定</h1>
+
+      <h2 class="sec">計時</h2>
+      <div class="group" id="gTimer"></div>
+      <p class="note" id="settingsNote" hidden>目前階段已開始，新的時間會從下一階段起生效。</p>
+
+      <h2 class="sec">提醒</h2>
+      <div class="group" id="gAlert"></div>
+
+      <h2 class="sec">外觀</h2>
+      <div class="group"><div class="row"><div class="row-l"><div class="row-t">深色模式</div></div></div>
+        <div class="row" style="padding-top:0;border-top:0"><div class="seg" id="themeSeg" role="radiogroup" aria-label="深色模式" style="width:100%"></div></div>
+      </div>
+
+      <h2 class="sec">資料</h2>
+      <div class="group">
+        <div class="row"><button type="button" class="row-btn" data-action="export">匯出備份（JSON）</button></div>
+        <div class="row"><button type="button" class="row-btn" data-action="import">匯入備份</button></div>
+        <div class="row"><button type="button" class="row-btn danger" data-action="clear">清除所有資料</button></div>
+      </div>
+      <p class="note">資料只保存在這個瀏覽器，不需要帳號，也不會上傳或同步到其他裝置。換手機或清除網站資料前，請先匯出備份。</p>
+
+      <details class="about">
+        <summary>關於背景計時與提醒</summary>
+        <p>FOCUS 以「結束時間」計算剩餘時間，不是每秒減一。切換 App 或鎖定螢幕後回到本頁，會立即顯示正確的剩餘時間，或已結束的狀態。</p>
+        <p>iPhone 的網頁在背景或鎖定螢幕時，不保證繼續執行，所以結束的那一刻不一定會有聲音、震動或通知。需要準時提醒時，請保持本頁在前景並開啟「保持螢幕亮著」。</p>
+        <p>網頁通知與網頁內音效是兩件不同的事，授權與否互不影響。iPhone 側邊的靜音開關開啟時，網頁音效不會發出聲音。</p>
+      </details>
+    </section>
+  </main>
+</div>
+
+<nav class="nav" aria-label="主要導覽"><div class="nav-in">
+  <button type="button" data-action="nav" data-page="focus" aria-current="page"><span data-icon="clock"></span>專注</button>
+  <button type="button" data-action="nav" data-page="tasks"><span data-icon="tasks"></span>任務</button>
+  <button type="button" data-action="nav" data-page="stats"><span data-icon="stats"></span>統計</button>
+  <button type="button" data-action="nav" data-page="settings"><span data-icon="sliders"></span>設定</button>
+</div></nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
+<div class="backdrop" id="sheetBackdrop" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ───────── 常數與工具 ───────── */
+var KEY='focus.v1';
+var TZ=8*3600*1000;                       // Asia/Taipei 全年 UTC+8，無日光節約時間
+var CATS=['讀書','工作','生活'];
+var MODE_NAME={focus:'專注',short:'短休息',long:'長休息'};
+var HINT={focus:'一次只做好一件事',short:'站起來，喝口水',long:'離開螢幕，好好休息'};
+var DEFAULTS={focus:25,short:5,long:15,cycles:4,goal:4,volume:60,autoStart:false,sound:true,vibrate:true,notify:false,wakeLock:false,theme:'system'};
+var LIMITS={focus:[1,120],short:[1,60],long:[1,90],cycles:[2,12],goal:[1,24]};
+var RING_C=590.62;
+
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
+function toInt(v,d){var n=Math.round(Number(v));return isFinite(n)?n:d;}
+function isNum(v){return typeof v==='number'&&isFinite(v);}
+function pad(n){return (n<10?'0':'')+n;}
+function tw(ts){return new Date(ts+TZ);}
+function dayKey(ts){return tw(ts).toISOString().slice(0,10);}
+function hhmm(ts){var d=tw(ts);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());}
+function keyBack(n){return dayKey(Date.now()-n*864e5);}
+function wkChar(key){return '日一二三四五六'[new Date(key+'T00:00:00Z').getUTCDay()];}
+
+var ICONS={
+  play:'<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+  pause:'<rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.7" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none"/>',
+  reset:'<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.2 4.2v4.2h4.2"/>',
+  skip:'<path d="M6 6v12l8-6z" fill="currentColor" stroke="none"/><path d="M18 6v12"/>',
+  sliders:'<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  tasks:'<path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="M4 6.5l1.2 1.2L7.4 5.4M4 12l1.2 1.2 2.2-2.3M4 17.5l1.2 1.2 2.2-2.3"/>',
+  stats:'<path d="M5 20v-9M12 20V4M19 20v-6"/>',
+  check:'<path d="M5.5 12.5l4.2 4.2L18.5 8"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash:'<path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/>'
+};
+function icon(n,size){size=size||22;return '<svg class="ic" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>';}
+
+/* ───────── 狀態與資料驗證 ───────── */
+var state, storageOk=true, bannerKind=null;
+var ui={page:'focus',filter:'open',range:'today',metric:'poms',dayKey:'',today:{poms:0,mins:0,done:0},last:'',btnKey:''};
+
+function durMs(mode,s){return (mode==='focus'?s.focus:mode==='short'?s.short:s.long)*60000;}
+function newTimer(mode,s){var p=durMs(mode,s);return {mode:mode,status:'idle',planMs:p,remainMs:p,endAt:0,startedAt:0,taskId:null,taskName:'',lastSeen:0};}
+function defaultState(){return {app:'focus',v:1,settings:Object.assign({},DEFAULTS),tasks:[],doneLog:[],log:[],currentTaskId:null,streak:0,timer:newTimer('focus',DEFAULTS)};}
+
+function sanitizeTimer(t,s){
+  if(!t||['focus','short','long'].indexOf(t.mode)<0)return newTimer('focus',s);
+  var out=newTimer(t.mode,s), plan=Number(t.planMs);
+  if((t.status==='running'||t.status==='paused')&&isFinite(plan)&&plan>=60000&&plan<=7200000){
+    var ok=false;
+    if(t.status==='running'&&isNum(t.endAt)&&t.endAt>0){out.status='running';out.endAt=t.endAt;out.remainMs=plan;out.lastSeen=isNum(t.lastSeen)?t.lastSeen:0;ok=true;}
+    else if(t.status==='paused'&&isNum(t.remainMs)){out.status='paused';out.remainMs=clamp(t.remainMs,1000,plan);ok=true;}
+    if(ok){out.planMs=plan;out.startedAt=isNum(t.startedAt)?t.startedAt:Date.now();out.taskId=typeof t.taskId==='string'?t.taskId:null;out.taskName=typeof t.taskName==='string'?t.taskName.slice(0,60):'';}
+  }
+  return out;
+}
+
+function sanitize(raw){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
+  var rs=raw.settings&&typeof raw.settings==='object'?raw.settings:{}, s=Object.assign({},DEFAULTS), k;
+  for(k in LIMITS)s[k]=clamp(toInt(rs[k],DEFAULTS[k]),LIMITS[k][0],LIMITS[k][1]);
+  s.volume=clamp(toInt(rs.volume,DEFAULTS.volume),0,100);
+  ['autoStart','sound','vibrate','notify','wakeLock'].forEach(function(b){s[b]=typeof rs[b]==='boolean'?rs[b]:DEFAULTS[b];});
+  s.theme=['system','light','dark'].indexOf(rs.theme)>=0?rs.theme:'system';
+
+  var seen={}, tasks=[];
+  (Array.isArray(raw.tasks)?raw.tasks:[]).forEach(function(t){
+    if(!t||typeof t.name!=='string')return;
+    var name=t.name.trim().slice(0,60);if(!name)return;
+    var id=typeof t.id==='string'&&t.id&&!seen[t.id]?t.id:uid()+tasks.length;seen[id]=1;
+    var completed=t.completed===true;
+    tasks.push({id:id,name:name,cat:(typeof t.cat==='string'&&t.cat.trim()?t.cat.trim().slice(0,8):'生活'),est:clamp(toInt(t.est,1),1,50),done:clamp(toInt(t.done,0),0,9999),completed:completed,created:isNum(t.created)?t.created:Date.now(),completedAt:completed&&isNum(t.completedAt)?t.completedAt:(completed?Date.now():null)});
+  });
+  var log=[];
+  (Array.isArray(raw.log)?raw.log:[]).forEach(function(e){
+    if(!e||(e.type!=='focus'&&e.type!=='interrupted')||!isNum(e.start)||!isNum(e.end))return;
+    log.push({id:typeof e.id==='string'?e.id:uid(),type:e.type,start:e.start,end:e.end,planned:clamp(toInt(e.planned,0),0,86400),actual:clamp(toInt(e.actual,0),0,86400),taskId:typeof e.taskId==='string'?e.taskId:null,taskName:typeof e.taskName==='string'?e.taskName.slice(0,60):'',reason:e.reason==='skip'?'skip':(e.reason==='reset'?'reset':undefined)});
+  });
+  var doneLog=[];
+  (Array.isArray(raw.doneLog)?raw.doneLog:[]).forEach(function(x){if(x&&isNum(x.ts))doneLog.push({id:typeof x.id==='string'?x.id:'',ts:x.ts});});
+  var cur=typeof raw.currentTaskId==='string'?tasks.filter(function(t){return t.id===raw.currentTaskId&&!t.completed;})[0]:null;
+  return {app:'focus',v:1,settings:s,tasks:tasks,doneLog:doneLog,log:log,currentTaskId:cur?cur.id:null,streak:clamp(toInt(raw.streak,0),0,100000),timer:sanitizeTimer(raw.timer,s)};
+}
+
+function loadState(){
+  var raw=null;
+  try{raw=localStorage.getItem(KEY);}catch(e){storageOk=false;return {st:defaultState(),problem:'blocked'};}
+  if(!raw)return {st:defaultState(),problem:null};
+  try{var st=sanitize(JSON.parse(raw));if(!st)throw new Error('invalid');return {st:st,problem:null};}
+  catch(e){try{localStorage.setItem(KEY+'.corrupt',raw);}catch(_){}return {st:defaultState(),problem:'corrupt'};}
+}
+
+function setBanner(kind,msg){
+  var b=$('#banner');bannerKind=msg?kind:null;
+  if(!msg){b.hidden=true;return;}
+  $('#bannerText').textContent=msg;b.hidden=false;
+}
+function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(state));
+    if(!storageOk){storageOk=true;if(bannerKind==='storage')setBanner(null);}
+  }catch(e){
+    storageOk=false;
+    setBanner('storage','無法儲存資料（儲存空間已滿，或瀏覽器禁止網站儲存）。目前的內容在重新整理後可能消失，請先到「設定」匯出備份。');
+  }
+}
+
+/* ───────── 計時核心（以時間戳為準） ───────── */
+function remaining(now){var t=state.timer;return t.status==='running'?clamp(t.endAt-now,0,t.planMs):t.remainMs;}
+function elapsed(now){return state.timer.planMs-remaining(now);}
+function findTask(id){for(var i=0;i<state.tasks.length;i++)if(state.tasks[i].id===id)return state.tasks[i];return null;}
+
+function beginAt(ts){
+  var t=state.timer;
+  t.startedAt=ts;t.status='running';t.endAt=ts+t.planMs;t.lastSeen=Date.now();
+  if(t.mode==='focus'){var task=findTask(state.currentTaskId);t.taskId=task?task.id:null;t.taskName=task?task.name:'';}
+}
+
+function logInterrupted(reason,now){
+  var t=state.timer,el=t.planMs-(t.status==='running'?clamp(t.endAt-now,0,t.planMs):t.remainMs);
+  if(t.mode!=='focus'||el<60000)return;
+  var task=findTask(t.taskId);
+  state.log.push({id:uid(),type:'interrupted',start:t.startedAt||now-el,end:now,planned:Math.round(t.planMs/1000),actual:Math.round(el/1000),taskId:task?task.id:t.taskId,taskName:task?task.name:(t.taskName||''),reason:reason});
+}
+
+function completePhase(endTs,now){
+  var t=state.timer, prev=t.mode, fresh=now-endTs<60000, next;
+  if(prev==='focus'){
+    var task=findTask(t.taskId||state.currentTaskId);
+    var sec=Math.round(t.planMs/1000);
+    state.log.push({id:uid(),type:'focus',start:t.startedAt||endTs-t.planMs,end:endTs,planned:sec,actual:sec,taskId:task?task.id:null,taskName:task?task.name:(t.taskName||'')});
+    if(task)task.done++;
+    state.streak++;
+    next=(state.streak%state.settings.cycles===0)?'long':'short';
+  }else next='focus';
+  state.timer=newTimer(next,state.settings);
+  if(state.settings.autoStart&&endTs+state.timer.planMs>now)beginAt(endTs);
+  announce(prev,next,endTs,fresh);
+}
+
+function announce(prev,next,endTs,fresh){
+  var msg;
+  if(prev==='focus')msg='完成一顆番茄鐘，接著是'+MODE_NAME[next];
+  else msg=MODE_NAME[prev]+'結束，準備回到專注';
+  if(!fresh){toast(MODE_NAME[prev]+'已於 '+hhmm(endTs)+' 結束',5000);return;}
+  toast(msg,4500);
+  playChime();
+  try{if(state.settings.vibrate&&navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}
+  try{
+    if(state.settings.notify&&document.hidden&&'Notification' in window&&Notification.permission==='granted')
+      new Notification('FOCUS',{body:msg,tag:'focus-phase'});
+  }catch(e){}
+}
+
+var ticker=null;
+function manageTicker(){
+  if(state.timer.status==='running'){if(!ticker)ticker=setInterval(tick,250);}
+  else if(ticker){clearInterval(ticker);ticker=null;}
+}
+function tick(){
+  var now=Date.now(),t=state.timer;
+  if(t.status==='running'){
+    if(t.lastSeen&&now<t.lastSeen-2000)t.endAt-=(t.lastSeen-now);   // 系統時間往回調：保留剩餘時間
+    t.lastSeen=now;
+    if(now>=t.endAt){
+      completePhase(t.endAt,now);
+      recomputeToday();save();manageTicker();manageWake();renderAll();
+      return;
+    }
+  }
+  var k=dayKey(now);
+  if(k!==ui.dayKey){recomputeToday();renderHeader();renderOverview();if(ui.page==='stats')renderStats();}
+  renderTimer();
+}
+
+function afterTimerChange(){
+  save();manageTicker();manageWake();renderTaskBlock();renderTimer(true);renderOverview();
+}
+function startTimer(){
+  var t=state.timer,now=Date.now();
+  if(t.status==='running')return;
+  unlockAudio();
+  if(t.status==='idle'){t.remainMs=t.planMs;beginAt(now);}
+  else{t.status='running';t.endAt=now+t.remainMs;t.lastSeen=now;}
+  afterTimerChange();
+}
+function pauseTimer(){
+  var t=state.timer,now=Date.now();
+  if(t.status!=='running')return;
+  var rem=remaining(now);
+  if(rem<=0){tick();return;}
+  t.remainMs=rem;t.status='paused';t.endAt=0;
+  afterTimerChange();
+}
+function toggleTimer(){if(state.timer.status==='running')pauseTimer();else startTimer();}
+
+function phaseToken(){var t=state.timer;return t.mode+':'+t.startedAt;}
+function fmtDur(ms){var s=Math.round(ms/1000),m=Math.floor(s/60);return m+' 分 '+pad(s%60)+' 秒';}
+
+function resetTimer(){
+  var t=state.timer,now=Date.now(),el=elapsed(now);
+  if(t.status==='idle'&&el===0){toast('已是完整時間');return;}
+  function apply(){
+    var tt=state.timer;
+    logInterrupted('reset',Date.now());
+    state.timer=newTimer(tt.mode,state.settings);
+    afterTimerChange();toast('已重設');
+  }
+  if(el<=0){apply();return;}
+  var token=phaseToken();
+  confirmSheet({title:'重設目前階段？',body:t.mode==='focus'?'已專注 '+fmtDur(el)+'。重設後回到完整時間，這一段不會計為完成的番茄鐘。':'重設後回到完整的休息時間。',okText:'重設',danger:true}).then(function(ok){
+    if(!ok)return;
+    if(token!==phaseToken()){toast('這個階段已經結束');return;}
+    apply();
+  });
+}
+function skipPhase(){
+  var t=state.timer,now=Date.now(),el=elapsed(now),prev=t.mode;
+  function apply(){
+    var tt=state.timer,n=Date.now();
+    logInterrupted('skip',n);
+    var next=tt.mode==='focus'?'short':'focus';
+    state.timer=newTimer(next,state.settings);
+    if(state.settings.autoStart)beginAt(n);
+    afterTimerChange();toast('已跳過，進入'+MODE_NAME[next]);
+  }
+  if(el<=0){apply();return;}
+  var token=phaseToken();
+  confirmSheet({title:'跳過'+MODE_NAME[prev]+'？',body:prev==='focus'?'這一段專注不會計為完成的番茄鐘，也不會計入專注時間。':'直接結束目前的休息。',okText:'跳過',danger:true}).then(function(ok){
+    if(!ok)return;
+    if(token!==phaseToken()){toast('這個階段已經結束');return;}
+    apply();
+  });
+}
+
+/* ───────── 統計計算 ───────── */
+function recomputeToday(){
+  var k=dayKey(Date.now()),p=0,s=0,d=0,i;
+  for(i=0;i<state.log.length;i++){var e=state.log[i];if(e.type==='focus'&&dayKey(e.end)===k){p++;s+=e.actual;}}
+  for(i=0;i<state.doneLog.length;i++)if(dayKey(state.doneLog[i].ts)===k)d++;
+  ui.dayKey=k;ui.today={poms:p,mins:Math.round(s/60),done:d};
+}
+function aggregate(){
+  var days={},ints={},done={},i;
+  for(i=0;i<state.log.length;i++){
+    var e=state.log[i],k=dayKey(e.end);
+    if(e.type==='focus'){var d=days[k]||(days[k]={poms:0,secs:0});d.poms++;d.secs+=e.actual;}
+    else{var x=ints[k]||(ints[k]={n:0,secs:0});x.n++;x.secs+=e.actual;}
+  }
+  for(i=0;i<state.doneLog.length;i++){var kk=dayKey(state.doneLog[i].ts);done[kk]=(done[kk]||0)+1;}
+  return {days:days,ints:ints,done:done};
+}
+
+/* ───────── 畫面：共用 ───────── */
+var toastTimer=null;
+function toast(msg,ms){
+  var el=$('#toast'),m=$('#toastMsg');m.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},ms||2200);
+}
+function greeting(h){return h<5?'夜深了':h<11?'早安':h<14?'午安':h<18?'午後好':h<22?'晚上好':'夜深了';}
+function isDark(){var th=state.settings.theme;return th==='dark'||(th==='system'&&!!window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+function renderHeader(){
+  var d=tw(Date.now());
+  $('#dateLine').textContent=(d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日 週'+'日一二三四五六'[d.getUTCDay()]+' · '+greeting(d.getUTCHours());
+  $('#themeBtn').innerHTML=icon(isDark()?'sun':'moon');
+  $('#themeBtn').setAttribute('aria-label',isDark()?'切換為淺色模式':'切換為深色模式');
+}
+function applyTheme(){
+  var th=state.settings.theme,r=document.documentElement;
+  if(th==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',th);
+  requestAnimationFrame(function(){
+    try{
+      var m=document.querySelector('meta[name="theme-color"]');
+      if(!m){m=document.createElement('meta');m.name='theme-color';document.head.appendChild(m);}
+      m.content=getComputedStyle(r).getPropertyValue('--bg').trim()||'#F8F7F3';
+    }catch(e){}
+  });
+}
+
+/* 底部彈窗 */
+var sheetBackdrop=$('#sheetBackdrop'),sheetEl=$('#sheet'),sheetReturn=null,sheetOnClose=null;
+function openSheet(html,onMount,onClose){
+  if(!sheetBackdrop.hidden)closeSheet(true);
+  sheetReturn=document.activeElement;
+  sheetEl.innerHTML=html;sheetBackdrop.hidden=false;document.body.classList.add('lock');
+  sheetOnClose=onClose||null;
+  if(onMount)onMount(sheetEl);
+  var f=sheetEl.querySelector('[data-autofocus]')||sheetEl.querySelector('button,input,textarea');
+  if(f)try{f.focus({preventScroll:true});}catch(e){f.focus();}
+}
+function closeSheet(silent){
+  if(sheetBackdrop.hidden)return;
+  sheetBackdrop.hidden=true;document.body.classList.remove('lock');sheetEl.innerHTML='';
+  var cb=sheetOnClose;sheetOnClose=null;
+  if(!silent&&sheetReturn&&document.contains(sheetReturn))try{sheetReturn.focus({preventScroll:true});}catch(e){}
+  if(cb)cb();
+}
+function confirmSheet(o){
+  return new Promise(function(resolve){
+    var done=false;function fin(v){if(!done){done=true;resolve(v);}}
+    openSheet('<h2 id="sheetTitle">'+esc(o.title)+'</h2><p class="sheet-body">'+esc(o.body)+'</p><div class="sheet-actions"><button type="button" class="btn ghost" data-sheet-close>取消</button><button type="button" class="btn '+(o.danger?'danger':'primary')+'" data-ok>'+esc(o.okText)+'</button></div>',
+      function(root){$('[data-ok]',root).addEventListener('click',function(){fin(true);closeSheet();});},
+      function(){fin(false);});
+  });
+}
+sheetBackdrop.addEventListener('click',function(e){if(e.target===sheetBackdrop)closeSheet();});
+sheetEl.addEventListener('click',function(e){if(e.target.closest('[data-sheet-close]'))closeSheet();});
+
+/* ───────── 畫面：專注頁 ───────── */
+function renderTaskBlock(){
+  var t=state.timer,cur=findTask(state.currentTaskId),h='',hasOpen=state.tasks.some(function(x){return !x.completed;});
+  if(t.mode==='focus'){
+    var label=t.status==='running'?'正在專注':'目前任務';
+    if(cur){
+      h+='<div class="t-label">'+label+'</div><div class="t-name">'+esc(cur.name)+'</div><div class="t-sub num">已完成 '+cur.done+' / '+cur.est+' 顆番茄</div>';
+    }else{
+      h+='<div class="t-label">'+label+'</div><div class="t-name empty">此刻，你想完成什麼？</div>';
+    }
+  }else{
+    h+='<div class="t-label">休息時間</div><div class="t-name empty">'+(cur?'稍後回到：'+esc(cur.name):'放鬆一下，不必想任務')+'</div>';
+  }
+  h+='<div class="t-actions">';
+  if(hasOpen)h+='<button type="button" class="link-btn" data-action="pick-task">'+(cur?'更換任務':'選擇任務')+'</button>';
+  h+='<button type="button" class="link-btn" data-action="new-task-focus">新增任務</button></div>';
+  $('#taskBlock').innerHTML=h;
+}
+
+function renderTimer(force){
+  var now=Date.now(),t=state.timer,rem=remaining(now),secs=Math.ceil(rem/1000);
+  var key=[t.mode,t.status,secs,t.planMs,ui.today.poms,t.remainMs===t.planMs].join('|');
+  if(!force&&key===ui.last)return;
+  ui.last=key;
+  var mm=Math.floor(secs/60),ss=secs%60;
+  $('#tMin').textContent=pad(mm);$('#tSec').textContent=pad(ss);
+  $('#digits').classList.toggle('wide',mm>=100);
+  $('#ring').style.strokeDashoffset=(RING_C*(rem/t.planMs)).toFixed(2);
+  $('#timer').dataset.mode=t.mode;
+  $('#modeName').textContent=MODE_NAME[t.mode];
+  $('#tState').textContent=t.status==='running'?'進行中':t.status==='paused'?'已暫停':'準備開始';
+  $('#tCount').textContent=t.mode==='focus'?'今日第 '+(ui.today.poms+1)+' 顆番茄':'今日已完成 '+ui.today.poms+' 顆番茄';
+  $('#hint').textContent=HINT[t.mode];
+  var label=t.status==='running'?'暫停':t.status==='paused'?'繼續':(t.mode==='focus'?'開始專注':'開始休息');
+  var bk=label+(t.status==='running'?'p':'s');
+  if(bk!==ui.btnKey){ui.btnKey=bk;$('#btnMain').innerHTML=icon(t.status==='running'?'pause':'play',22)+'<span>'+label+'</span>';$('#btnMain').setAttribute('aria-label',label);}
+  $('#btnReset').disabled=(t.status==='idle'&&t.remainMs===t.planMs);
+  if(t.status==='running')document.title=pad(mm)+':'+pad(ss)+' '+MODE_NAME[t.mode]+' · FOCUS';
+  else document.title=t.status==='paused'?'已暫停 '+pad(mm)+':'+pad(ss)+' · FOCUS':'FOCUS';
+}
+function renderOverview(){
+  var o=ui.today,g=state.settings.goal;
+  $('#ovPoms').innerHTML=o.poms+'<small>/ '+g+'</small>';
+  $('#ovPomsL').textContent='今日番茄鐘';
+  $('#ovMins').innerHTML=o.mins+'<small>分</small>';
+  $('#ovDone').textContent=o.done;
+}
+
+/* ───────── 畫面：任務頁 ───────── */
+function renderTasks(){
+  var f=ui.filter,open=state.tasks.filter(function(t){return !t.completed;}).length,doneN=state.tasks.length-open;
+  $('#taskFilter').innerHTML=[['open','未完成',open],['done','已完成',doneN],['all','全部',state.tasks.length]].map(function(x){
+    return '<button type="button" data-action="filter" data-v="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+' <span class="num">'+x[2]+'</span></button>';
+  }).join('');
+  var list=state.tasks.filter(function(t){return f==='all'||(f==='open'?!t.completed:t.completed);});
+  list.sort(function(a,b){
+    if(f==='done')return (b.completedAt||0)-(a.completedAt||0);
+    if(a.id===state.currentTaskId)return -1;if(b.id===state.currentTaskId)return 1;
+    if(a.completed!==b.completed)return a.completed?1:-1;
+    return b.created-a.created;
+  });
+  var el=$('#taskList');
+  if(!state.tasks.length){
+    el.innerHTML='<div class="empty-state"><h3>還沒有任務</h3><p>新增一件想完成的事，開始你的第一顆番茄鐘。</p><button type="button" class="btn primary" data-action="new-task">新增任務</button></div>';return;
+  }
+  if(!list.length){
+    el.innerHTML='<div class="empty-state"><h3>'+(f==='done'?'還沒有完成的任務':'沒有未完成的任務')+'</h3><p>'+(f==='done'?'完成的任務會出現在這裡。':'所有任務都完成了，可以新增下一個。')+'</p></div>';return;
+  }
+  el.innerHTML='<ul class="task-list">'+list.map(function(t){
+    var pct=Math.min(100,Math.round(t.done/t.est*100)),isCur=t.id===state.currentTaskId;
+    return '<li class="task'+(t.completed?' is-done':'')+'"><div class="task-top">'+
+      '<button type="button" class="check" role="checkbox" aria-checked="'+t.completed+'" aria-label="完成「'+esc(t.name)+'」" data-action="toggle-task" data-id="'+esc(t.id)+'"><span class="box">'+(t.completed?icon('check',14):'')+'</span></button>'+
+      '<div class="task-main"><div class="task-name">'+esc(t.name)+'</div><div class="task-meta"><span class="tag">'+esc(t.cat)+'</span><span class="num">'+t.done+' / '+t.est+' 顆'+(t.done>t.est?'（已超過預計）':'')+'</span>'+(isCur?'<span class="cur">目前任務</span>':'')+'</div><div class="meter"><i style="width:'+pct+'%"></i></div></div></div>'+
+      '<div class="task-actions">'+(t.completed||isCur?'':'<button type="button" class="go" data-action="select-task" data-id="'+esc(t.id)+'">設為目前任務</button>')+
+      '<button type="button" data-action="edit-task" data-id="'+esc(t.id)+'" aria-label="編輯「'+esc(t.name)+'」">'+icon('edit',16)+'編輯</button>'+
+      '<button type="button" data-action="delete-task" data-id="'+esc(t.id)+'" aria-label="刪除「'+esc(t.name)+'」">'+icon('trash',16)+'刪除</button></div></li>';
+  }).join('')+'</ul>';
+}
+
+function openTaskForm(task,opts){
+  opts=opts||{};
+  var isEdit=!!task,catType=task?(CATS.indexOf(task.cat)>=0?task.cat:'自訂'):'讀書',custom=(task&&catType==='自訂')?task.cat:'',est=task?task.est:2;
+  var all=CATS.concat(['自訂']);
+  openSheet('<h2 id="sheetTitle">'+(isEdit?'編輯任務':'新增任務')+'</h2>'+
+    '<form id="tf" novalidate>'+
+    '<label class="fld" for="tfName">任務名稱</label>'+
+    '<input class="input" id="tfName" maxlength="60" autocomplete="off" enterkeyhint="done" placeholder="例如：準備微積分考試" data-autofocus>'+
+    '<p class="err" id="tfErr" hidden>請輸入任務名稱。</p>'+
+    '<fieldset><legend class="fld">類別</legend><div class="chips" id="tfCats" role="radiogroup" aria-label="任務類別">'+
+    all.map(function(c){return '<button type="button" class="chip" role="radio" data-cat="'+c+'" aria-checked="'+(c===catType)+'">'+c+'</button>';}).join('')+'</div></fieldset>'+
+    '<input class="input" id="tfCustom" maxlength="8" autocomplete="off" placeholder="自訂類別名稱（最多 8 字）" style="margin-top:10px" '+(catType==='自訂'?'':'hidden')+' aria-label="自訂類別名稱">'+
+    '<div class="est"><div><div class="row-t">預計番茄鐘</div><div class="row-s">每顆約 '+state.settings.focus+' 分鐘</div></div>'+
+    '<div class="stepper"><button type="button" class="step" id="estMinus" aria-label="減少預計番茄鐘">−</button><output class="num" id="estVal" aria-live="polite">'+est+'</output><span class="unit">顆</span><button type="button" class="step" id="estPlus" aria-label="增加預計番茄鐘">+</button></div></div>'+
+    '<div class="sheet-actions"><button type="button" class="btn ghost" data-sheet-close>取消</button><button type="submit" class="btn primary">儲存</button></div></form>',
+    function(root){
+      var name=$('#tfName',root),cust=$('#tfCustom',root),err=$('#tfErr',root),val=$('#estVal',root);
+      name.value=task?task.name:'';cust.value=custom;
+      $('#tfCats',root).addEventListener('click',function(e){
+        var b=e.target.closest('[data-cat]');if(!b)return;
+        catType=b.dataset.cat;
+        $$('[data-cat]',root).forEach(function(x){x.setAttribute('aria-checked',x===b?'true':'false');});
+        cust.hidden=catType!=='自訂';if(!cust.hidden)cust.focus();
+      });
+      $('#estMinus',root).addEventListener('click',function(){est=clamp(est-1,1,50);val.textContent=est;});
+      $('#estPlus',root).addEventListener('click',function(){est=clamp(est+1,1,50);val.textContent=est;});
+      name.addEventListener('input',function(){err.hidden=true;name.removeAttribute('aria-invalid');});
+      $('#tf',root).addEventListener('submit',function(e){
+        e.preventDefault();
+        var n=name.value.trim();
+        if(!n){err.hidden=false;name.setAttribute('aria-invalid','true');name.focus();return;}
+        var cat=catType==='自訂'?(cust.value.trim().slice(0,8)||'自訂'):catType;
+        if(isEdit){task.name=n;task.cat=cat;task.est=est;if(state.timer.taskId===task.id)state.timer.taskName=n;}
+        else{
+          var nt={id:uid(),name:n,cat:cat,est:est,done:0,completed:false,created:Date.now(),completedAt:null};
+          state.tasks.unshift(nt);
+          if(opts.select)state.currentTaskId=nt.id;
+        }
+        save();closeSheet();renderAll();toast(isEdit?'已更新任務':(opts.select?'已新增並設為目前任務':'已新增任務'));
+      });
+    });
+}
+function openPicker(){
+  var open=state.tasks.filter(function(t){return !t.completed;});
+  openSheet('<h2 id="sheetTitle">選擇任務</h2><p class="sheet-body">選一件這顆番茄鐘要完成的事。</p><ul class="pick">'+
+    open.map(function(t){return '<li><button type="button" role="radio" aria-checked="'+(t.id===state.currentTaskId)+'" data-pick="'+esc(t.id)+'"><span><span class="pn">'+esc(t.name)+'</span><br><span class="ps num">'+esc(t.cat)+' · '+t.done+' / '+t.est+' 顆</span></span>'+(t.id===state.currentTaskId?icon('check',20):'')+'</button></li>';}).join('')+
+    '<li><button type="button" role="radio" aria-checked="'+(!state.currentTaskId)+'" data-pick=""><span class="pn">不指定任務</span>'+(!state.currentTaskId?icon('check',20):'')+'</button></li></ul>'+
+    '<button type="button" class="btn ghost block" data-newfocus>新增任務</button>',
+    function(root){
+      $('.pick',root).addEventListener('click',function(e){
+        var p=e.target.closest('[data-pick]');if(!p)return;
+        state.currentTaskId=p.dataset.pick||null;save();closeSheet();renderAll();
+      });
+      $('[data-newfocus]',root).addEventListener('click',function(){openTaskForm(null,{select:true});});
+    });
+}
+
+/* ───────── 畫面：統計頁 ───────── */
+function renderStats(){
+  var agg=aggregate(),today=dayKey(Date.now()),g=state.settings.goal,r=ui.range;
+  $('#rangeSeg').innerHTML=[['today','今日'],['7','最近 7 天'],['all','累積']].map(function(x){return '<button type="button" data-action="range" data-v="'+x[0]+'" aria-pressed="'+(r===x[0])+'">'+x[1]+'</button>';}).join('');
+  var keys,i,k;
+  if(r==='today')keys=[today];
+  else if(r==='7'){keys=[];for(i=0;i<7;i++)keys.push(keyBack(i));}
+  else{var set={};[agg.days,agg.ints,agg.done].forEach(function(o){for(var kk in o)set[kk]=1;});keys=Object.keys(set);}
+  var poms=0,secs=0,tasksDone=0,intN=0,intSecs=0,reached=0,ratioSum=0,active=0;
+  keys.forEach(function(k){
+    var d=agg.days[k]||{poms:0,secs:0};
+    poms+=d.poms;secs+=d.secs;tasksDone+=agg.done[k]||0;
+    var it=agg.ints[k];if(it){intN+=it.n;intSecs+=it.secs;}
+    if(d.poms>0)active++;
+    if(d.poms>=g)reached++;
+    ratioSum+=Math.min(1,d.poms/g);
+  });
+  var mins=Math.round(secs/60),h='';
+  var goalTxt,pct;
+  if(r==='today'){pct=Math.min(100,Math.round(poms/g*100));goalTxt='<span>今日目標</span><b class="num">'+poms+' / '+g+' 顆 · '+pct+'%</b>';}
+  else if(r==='7'){pct=Math.round(ratioSum/7*100);goalTxt='<span>達標 '+reached+' / 7 天</span><b class="num">平均達成率 '+pct+'%</b>';}
+  else{pct=active?Math.round(reached/active*100):0;goalTxt=active?'<span>達標 '+reached+' / '+active+' 個有專注的日子</span><b class="num">'+pct+'%</b>':'<span>還沒有專注紀錄</span><b class="num">0%</b>';}
+  h+='<div class="card" style="margin-top:16px"><div class="sum"><div><b class="num">'+poms+'</b><span>完成番茄鐘</span></div><div><b class="num">'+mins+'<small>分</small></b><span>有效專注</span></div><div><b class="num">'+tasksDone+'</b><span>完成任務</span></div></div>'+
+    '<div class="goal"><div class="goal-top">'+goalTxt+'</div><div class="pbar" role="img" aria-label="每日目標達成率 '+pct+'%"><i style="width:'+pct+'%"></i></div></div>'+
+    (intN?'<p class="note">另有 '+intN+' 次中斷（重設或跳過），約 '+Math.round(intSecs/60)+' 分鐘，不計入番茄鐘與專注時間。</p>':'')+'</div>';
+
+  /* 最近 7 天圖表 */
+  var ds=[];for(i=6;i>=0;i--)ds.push(keyBack(i));
+  var metric=ui.metric,goalV=metric==='poms'?g:g*state.settings.focus;
+  var vals=ds.map(function(k){var d=agg.days[k];return d?(metric==='poms'?d.poms:Math.round(d.secs/60)):0;});
+  var max=Math.max.apply(null,vals.concat([goalV,1]));
+  var unit=metric==='poms'?'顆':'分';
+  h+='<h2 class="sec">最近 7 天</h2><div class="card"><div class="chart-head"><h3>每日'+(metric==='poms'?'番茄鐘':'專注分鐘')+'</h3><div class="seg" role="group" aria-label="圖表單位"><button type="button" data-action="metric" data-v="poms" aria-pressed="'+(metric==='poms')+'">番茄</button><button type="button" data-action="metric" data-v="mins" aria-pressed="'+(metric==='mins')+'">分鐘</button></div></div>'+
+    '<div class="plot" role="img" aria-label="'+ds.map(function(k,j){return '週'+wkChar(k)+' '+vals[j]+unit;}).join('，')+'">'+
+    ds.map(function(k,j){var v=vals[j],p=v/max*100;return '<div class="col"><i class="b'+(v>=goalV?' hit':'')+(v===0?' zero':'')+'" style="height:'+p.toFixed(1)+'%"></i>'+(v>0?'<span class="v num" style="bottom:'+p.toFixed(1)+'%">'+v+'</span>':'')+'</div>';}).join('')+
+    '<div class="gl" style="bottom:'+(goalV/max*100).toFixed(1)+'%"></div></div>'+
+    '<div class="labs">'+ds.map(function(k){return '<span class="'+(k===today?'today':'')+'">'+(k===today?'今':wkChar(k))+'</span>';}).join('')+'</div>'+
+    '<p class="note">虛線是每日目標（'+goalV+' '+unit+'），深色長條代表達標。</p>';
+  var thisWk=0,prevWk=0;
+  for(i=0;i<7;i++){var a=agg.days[keyBack(i)],b=agg.days[keyBack(i+7)];thisWk+=a?a.secs:0;prevWk+=b?b.secs:0;}
+  thisWk=Math.round(thisWk/60);prevWk=Math.round(prevWk/60);
+  var trend;
+  if(!thisWk&&!prevWk)trend='最近兩週都還沒有專注紀錄。';
+  else if(!prevWk)trend='最近 7 天專注 '+thisWk+' 分鐘，前 7 天沒有紀錄。';
+  else{var diff=thisWk-prevWk;trend='最近 7 天專注 '+thisWk+' 分鐘，比前 7 天（'+prevWk+' 分鐘）'+(diff>0?'多 '+diff:diff<0?'少 '+(-diff):'一樣')+(diff===0?'。':' 分鐘（'+(diff>0?'+':'−')+Math.round(Math.abs(diff)/prevWk*100)+'%）。');}
+  h+='<p class="note" style="color:var(--fg)">'+trend+'</p></div>';
+
+  /* 各任務專注時間 */
+  var inRange={};keys.forEach(function(k){inRange[k]=1;});
+  var byTask={};
+  state.log.forEach(function(e){
+    if(e.type!=='focus'||!inRange[dayKey(e.end)])return;
+    var n=e.taskName||'未指定任務',o=byTask[n]||(byTask[n]={secs:0,poms:0});o.secs+=e.actual;o.poms++;
+  });
+  var names=Object.keys(byTask).sort(function(a,b){return byTask[b].secs-byTask[a].secs;});
+  h+='<h2 class="sec">各任務專注時間</h2><div class="card">';
+  if(!names.length)h+='<p class="note" style="margin:0">'+(state.log.length?'這個範圍內還沒有完成的番茄鐘。':'完成第一顆番茄鐘後，這裡會顯示每個任務花了多少時間。')+'</p>';
+  else{var top=byTask[names[0]].secs||1;
+    h+='<ul class="bars">'+names.slice(0,12).map(function(n){var o=byTask[n];return '<li><div class="r"><span>'+esc(n)+'</span><span class="num">'+Math.round(o.secs/60)+' 分 · '+o.poms+' 顆</span></div><div class="pbar"><i style="width:'+Math.max(3,Math.round(o.secs/top*100))+'%"></i></div></li>';}).join('')+'</ul>'+(names.length>12?'<p class="note">只顯示前 12 項。</p>':'');}
+  h+='</div>';
+  $('#statsBody').innerHTML=h;
+}
+
+/* ───────── 畫面：設定頁 ───────── */
+var canVibrate=!!(navigator&&navigator.vibrate), canWake=!!(navigator&&navigator.wakeLock);
+function stepRow(key,title,unit){
+  return '<div class="row"><div class="row-l"><div class="row-t">'+title+'</div></div><div class="stepper" role="group" aria-label="'+title+'"><button type="button" class="step" data-action="step" data-key="'+key+'" data-dir="-1" aria-label="減少'+title+'">−</button><output class="num" data-val="'+key+'">0</output><span class="unit">'+unit+'</span><button type="button" class="step" data-action="step" data-key="'+key+'" data-dir="1" aria-label="增加'+title+'">+</button></div></div>';
+}
+function switchRow(key,title,sub){
+  return '<div class="row"><div class="row-l"><div class="row-t" id="lb-'+key+'">'+title+'</div>'+(sub?'<div class="row-s" id="sub-'+key+'">'+sub+'</div>':'')+'</div><button type="button" class="switch" role="switch" data-action="switch" data-key="'+key+'" aria-labelledby="lb-'+key+'" aria-checked="false"></button></div>';
+}
+function buildSettings(){
+  $('#gTimer').innerHTML=stepRow('focus','專注時間','分')+stepRow('short','短休息','分')+stepRow('long','長休息','分')+stepRow('cycles','長休息前專注','次')+
+    switchRow('autoStart','自動開始下一階段','階段結束或跳過後，自動開始下一階段')+stepRow('goal','每日專注目標','顆');
+  $('#gAlert').innerHTML=switchRow('sound','計時結束音效','')+
+    '<div class="row"><div class="row-l"><div class="row-t">音量</div></div><div class="vol"><input type="range" id="volume" min="0" max="100" step="5" aria-label="音量"><button type="button" class="small-btn" data-action="preview-sound">試聽</button></div></div>'+
+    (canVibrate?switchRow('vibrate','震動回饋','計時結束時震動'):'<div class="row"><div class="row-l"><div class="row-t">震動回饋</div><div class="row-s">此瀏覽器不支援網頁震動（iPhone 的 Safari 目前不支援）。</div></div></div>')+
+    switchRow('notify','網頁通知','')+
+    (canWake?switchRow('wakeLock','計時時保持螢幕亮著','減少 iPhone 鎖定螢幕造成計時頁被暫停的機會，會多耗電'):'');
+  $('#themeSeg').innerHTML=[['system','跟隨系統'],['light','淺色'],['dark','深色']].map(function(x){return '<button type="button" role="radio" data-action="theme-opt" data-v="'+x[0]+'" aria-checked="false">'+x[1]+'</button>';}).join('');
+  $('#volume').addEventListener('input',function(e){state.settings.volume=toInt(e.target.value,60);save();});
+  $('#volume').addEventListener('change',function(){previewSound(true);});
+}
+function notifStatus(){
+  if(!('Notification' in window))return {t:'此瀏覽器不支援網頁通知。計時結束後請回到本頁，畫面會顯示正確狀態。',ok:false};
+  var p=Notification.permission;
+  if(p==='granted')return {t:'已授權。只在本頁仍在執行時才能發出通知，鎖定螢幕或被系統暫停後無法保證提醒。',ok:true};
+  if(p==='denied')return {t:'通知已被封鎖。請到瀏覽器的網站設定開啟。',ok:false};
+  return {t:'尚未授權。開啟時會詢問你。',ok:false};
+}
+function syncSettings(){
+  var s=state.settings;
+  $$('[data-val]').forEach(function(o){o.textContent=s[o.dataset.val];});
+  $$('[data-action="step"]').forEach(function(b){var lim=LIMITS[b.dataset.key],d=+b.dataset.dir;b.disabled=d<0?s[b.dataset.key]<=lim[0]:s[b.dataset.key]>=lim[1];});
+  $$('[data-action="switch"]').forEach(function(b){
+    var k=b.dataset.key,on=!!s[k];
+    if(k==='notify')on=s.notify&&notifStatus().ok;
+    b.setAttribute('aria-checked',on?'true':'false');
+  });
+  var ns=$('#sub-notify');
+  if(!ns){var row=$('#lb-notify').parentNode;ns=document.createElement('div');ns.className='row-s';ns.id='sub-notify';row.appendChild(ns);}
+  ns.textContent=notifStatus().t;
+  $('#volume').value=s.volume;$('#volume').disabled=!s.sound;
+  $$('[data-action="theme-opt"]').forEach(function(b){b.setAttribute('aria-checked',b.dataset.v===s.theme?'true':'false');});
+  $('#settingsNote').hidden=state.timer.status==='idle';
+}
+function setSetting(key,val){
+  var s=state.settings;s[key]=val;
+  var t=state.timer;
+  if(t.status==='idle'&&(key==='focus'||key==='short'||key==='long')&&t.mode===key){t.planMs=durMs(t.mode,s);t.remainMs=t.planMs;}
+  save();syncSettings();renderTimer(true);renderOverview();
+  if(ui.page==='stats')renderStats();
+}
+function stepSetting(key,dir){
+  var lim=LIMITS[key],v=clamp(state.settings[key]+dir,lim[0],lim[1]);
+  if(v!==state.settings[key])setSetting(key,v);
+}
+function toggleSwitch(key){
+  var s=state.settings;
+  if(key==='notify'){
+    if(s.notify){s.notify=false;save();syncSettings();return;}
+    if(!('Notification' in window)){toast('此瀏覽器不支援網頁通知');return;}
+    if(Notification.permission==='granted'){s.notify=true;save();syncSettings();toast('已開啟通知');return;}
+    if(Notification.permission==='denied'){toast('通知已被封鎖，請到瀏覽器網站設定開啟');return;}
+    try{
+      var res=Notification.requestPermission(function(p){afterPerm(p);});
+      if(res&&res.then)res.then(afterPerm,function(){afterPerm('denied');});
+    }catch(e){afterPerm('denied');}
+    return;
+  }
+  setSetting(key,!s[key]);
+  if(key==='sound'&&s.sound)unlockAudio();
+  if(key==='wakeLock')manageWake();
+}
+function afterPerm(p){
+  if(p==='granted'){state.settings.notify=true;save();toast('已開啟通知');}
+  else toast('沒有取得通知權限');
+  syncSettings();
+}
+
+/* ───────── 音效、通知、螢幕常亮 ───────── */
+var actx=null;
+function unlockAudio(){
+  if(!state.settings.sound)return;
+  try{
+    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;actx=new AC();}
+    if(actx.state==='suspended')actx.resume();
+  }catch(e){}
+}
+function playChime(){
+  var vol=state.settings.volume/100;
+  if(!state.settings.sound||vol<=0||!actx||actx.state!=='running')return false;
+  try{
+    var t0=actx.currentTime+0.02;
+    [659.25,783.99,1046.5].forEach(function(f,i){
+      var o=actx.createOscillator(),g=actx.createGain(),st=t0+i*0.2;
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,st);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002,vol*0.28),st+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,st+1.3);
+      o.connect(g);g.connect(actx.destination);o.start(st);o.stop(st+1.4);
+    });
+    return true;
+  }catch(e){return false;}
+}
+function previewSound(quiet){
+  if(!state.settings.sound){if(!quiet)toast('音效已關閉');return;}
+  unlockAudio();
+  setTimeout(function(){if(!playChime()&&!quiet)toast('此瀏覽器目前無法播放音效');},60);
+}
+var wl=null;
+function manageWake(){
+  if(!canWake)return;
+  var want=state.settings.wakeLock&&state.timer.status==='running'&&!document.hidden;
+  if(want&&!wl){
+    try{navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){wl=null;});},function(){});}catch(e){}
+  }else if(!want&&wl){try{wl.release();}catch(e){}wl=null;}
+}
+
+/* ───────── 備份：匯出、匯入、清除 ───────── */
+function exportText(){
+  return JSON.stringify({app:'focus',v:1,exportedAt:Date.now(),settings:state.settings,tasks:state.tasks,doneLog:state.doneLog,log:state.log,currentTaskId:state.currentTaskId,streak:state.streak},null,1);
+}
+function openExport(){
+  openSheet('<h2 id="sheetTitle">匯出備份</h2><p class="sheet-body">包含設定、任務與全部專注紀錄。</p><textarea class="input" id="exText" rows="6" readonly spellcheck="false" aria-label="備份內容"></textarea>'+
+    '<div class="sheet-actions"><button type="button" class="btn ghost" id="exCopy">複製</button><button type="button" class="btn primary" id="exDl">下載檔案</button></div><p class="msg" id="exMsg" role="status"></p><div class="sheet-actions" style="margin-top:4px"><button type="button" class="btn ghost" data-sheet-close>關閉</button></div>',
+    function(root){
+      var ta=$('#exText',root),msg=$('#exMsg',root),text=exportText();ta.value=text;
+      $('#exCopy',root).addEventListener('click',function(){
+        function fallback(){
+          try{ta.focus();ta.select();ta.setSelectionRange(0,text.length);
+            if(document.execCommand&&document.execCommand('copy')){msg.textContent='已複製到剪貼簿。';return;}}catch(e){}
+          msg.textContent='無法自動複製，內容已選取，請長按後選擇「拷貝」。';
+        }
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){msg.textContent='已複製到剪貼簿。';},fallback);}
+        else fallback();
+      });
+      $('#exDl',root).addEventListener('click',function(){
+        try{
+          var url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');
+          a.href=url;a.download='focus-backup-'+dayKey(Date.now())+'.json';document.body.appendChild(a);a.click();a.remove();
+          setTimeout(function(){URL.revokeObjectURL(url);},4000);
+          msg.textContent='已送出下載。如果沒有出現檔案，請改用「複製」。';
+        }catch(e){msg.textContent='此環境無法下載，請改用「複製」。';}
+      });
+    });
+}
+function openImport(){
+  openSheet('<h2 id="sheetTitle">匯入備份</h2><p class="sheet-body">匯入會取代目前所有資料，進行中的計時會被重設。</p>'+
+    '<label class="btn ghost block" for="imFile" tabindex="0">選擇 JSON 檔案</label><input type="file" id="imFile" class="sr" accept=".json,application/json">'+
+    '<label class="fld" for="imText">或貼上備份內容</label><textarea class="input" id="imText" rows="5" spellcheck="false" placeholder="{ &quot;app&quot;: &quot;focus&quot;, … }"></textarea><p class="err" id="imErr" hidden></p>'+
+    '<div class="sheet-actions"><button type="button" class="btn ghost" data-sheet-close>取消</button><button type="button" class="btn primary" id="imGo">匯入</button></div>',
+    function(root){
+      var ta=$('#imText',root),err=$('#imErr',root);
+      $('#imFile',root).addEventListener('change',function(e){
+        var f=e.target.files&&e.target.files[0];if(!f)return;
+        var r=new FileReader();r.onload=function(){ta.value=String(r.result||'');err.hidden=true;};
+        r.onerror=function(){err.textContent='讀取檔案失敗。';err.hidden=false;};r.readAsText(f);
+      });
+      $('#imGo',root).addEventListener('click',function(){
+        var parsed=null;
+        try{parsed=JSON.parse(ta.value);}catch(e){err.textContent='內容不是有效的 JSON。';err.hidden=false;return;}
+        if(!parsed||parsed.app!=='focus'){err.textContent='這不是 FOCUS 的備份檔。';err.hidden=false;return;}
+        var st=sanitize(parsed);
+        if(!st){err.textContent='備份內容無法讀取。';err.hidden=false;return;}
+        closeSheet();
+        confirmSheet({title:'取代目前資料？',body:'備份內有 '+st.tasks.length+' 個任務、'+st.log.filter(function(e){return e.type==='focus';}).length+' 顆番茄鐘紀錄。匯入後，目前的資料會被取代。',okText:'匯入',danger:true}).then(function(ok){
+          if(!ok)return;
+          st.timer=newTimer('focus',st.settings);
+          state=st;recomputeToday();save();manageTicker();manageWake();applyTheme();buildSettingsSync();renderAll();toast('已匯入備份');
+        });
+      });
+    });
+}
+function clearAll(){
+  confirmSheet({title:'清除所有資料？',body:'任務、設定與全部專注紀錄都會從這個瀏覽器移除。建議先匯出備份。',okText:'繼續',danger:true}).then(function(ok){
+    if(!ok)return;
+    return confirmSheet({title:'再確認一次',body:'這個動作無法復原。確定要永久清除所有資料嗎？',okText:'永久清除',danger:true}).then(function(ok2){
+      if(!ok2)return;
+      try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'.corrupt');}catch(e){}
+      state=defaultState();recomputeToday();manageTicker();manageWake();applyTheme();ui.filter='open';save();renderAll();toast('已清除所有資料');
+    });
+  });
+}
+function buildSettingsSync(){syncSettings();}
+
+/* ───────── 導覽與事件 ───────── */
+function renderAll(){
+  renderHeader();renderTaskBlock();renderTimer(true);renderOverview();
+  if(ui.page==='tasks')renderTasks();
+  if(ui.page==='stats')renderStats();
+  syncSettings();
+}
+function showPage(p){
+  ui.page=p;
+  $$('.page').forEach(function(s){s.hidden=s.id!=='page-'+p;});
+  $$('.nav button').forEach(function(b){if(b.dataset.page===p)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  if(p==='tasks')renderTasks();
+  if(p==='stats')renderStats();
+  if(p==='settings')syncSettings();
+  window.scrollTo(0,0);
+}
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-action]');if(!el||el.disabled)return;
+  var a=el.dataset.action,id=el.dataset.id;
+  switch(a){
+    case 'nav':showPage(el.dataset.page);break;
+    case 'toggle-theme':setSetting('theme',isDark()?'light':'dark');applyTheme();renderHeader();break;
+    case 'toggle-timer':toggleTimer();break;
+    case 'reset':resetTimer();break;
+    case 'skip':skipPhase();break;
+    case 'pick-task':openPicker();break;
+    case 'new-task':openTaskForm(null,{});break;
+    case 'new-task-focus':openTaskForm(null,{select:true});break;
+    case 'select-task':state.currentTaskId=id;save();renderAll();toast('已設為目前任務，到「專注」開始吧');break;
+    case 'edit-task':openTaskForm(findTask(id),{});break;
+    case 'delete-task':
+      var tk=findTask(id);if(!tk)break;
+      confirmSheet({title:'刪除任務？',body:'「'+tk.name+'」會被刪除。已記錄的專注時間與統計會保留。',okText:'刪除',danger:true}).then(function(ok){
+        if(!ok)return;
+        state.tasks=state.tasks.filter(function(x){return x.id!==id;});
+        if(state.currentTaskId===id)state.currentTaskId=null;
+        save();renderAll();toast('已刪除任務');
+      });break;
+    case 'toggle-task':
+      var t2=findTask(id);if(!t2)break;
+      t2.completed=!t2.completed;
+      if(t2.completed){
+        t2.completedAt=Date.now();state.doneLog.push({id:t2.id,ts:t2.completedAt});
+        if(state.currentTaskId===id)state.currentTaskId=null;
+        toast('任務完成');
+      }else{
+        t2.completedAt=null;
+        for(var i=state.doneLog.length-1;i>=0;i--)if(state.doneLog[i].id===id){state.doneLog.splice(i,1);break;}
+      }
+      recomputeToday();save();renderAll();break;
+    case 'filter':ui.filter=el.dataset.v;renderTasks();break;
+    case 'range':ui.range=el.dataset.v;renderStats();break;
+    case 'metric':ui.metric=el.dataset.v;renderStats();break;
+    case 'step':if(e.detail===0)stepSetting(el.dataset.key,+el.dataset.dir);break;   // 觸控由 pointerdown 處理，這裡只接鍵盤
+    case 'switch':toggleSwitch(el.dataset.key);break;
+    case 'theme-opt':setSetting('theme',el.dataset.v);applyTheme();renderHeader();break;
+    case 'preview-sound':previewSound(false);break;
+    case 'export':openExport();break;
+    case 'import':openImport();break;
+    case 'clear':clearAll();break;
+    case 'banner-dismiss':setBanner(null,null);break;
+  }
+});
+
+/* 步進按鈕：按住可連續調整 */
+var holdT=null,holdI=null;
+function stopHold(){clearTimeout(holdT);clearInterval(holdI);holdT=holdI=null;}
+document.addEventListener('pointerdown',function(e){
+  unlockAudio();
+  var b=e.target.closest('[data-action="step"]');if(!b||b.disabled)return;
+  var key=b.dataset.key,dir=+b.dataset.dir;
+  stepSetting(key,dir);stopHold();
+  holdT=setTimeout(function(){holdI=setInterval(function(){stepSetting(key,dir);},90);},420);
+});
+['pointerup','pointercancel','pointerleave','blur'].forEach(function(ev){document.addEventListener(ev,stopHold,true);});
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&!sheetBackdrop.hidden){closeSheet();return;}
+  if(e.code==='Space'&&ui.page==='focus'&&sheetBackdrop.hidden&&!/^(INPUT|TEXTAREA|BUTTON|SELECT|A|SUMMARY)$/.test(e.target.tagName)){e.preventDefault();toggleTimer();}
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('label[for="imFile"]')){e.preventDefault();$('#imFile').click();}
+});
+
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){save();manageWake();}
+  else{tick();manageWake();renderHeader();}
+});
+window.addEventListener('pageshow',function(){tick();});
+window.addEventListener('focus',function(){tick();});
+window.addEventListener('pagehide',function(){save();});
+window.addEventListener('storage',function(e){
+  if(e.key!==KEY||!e.newValue)return;
+  try{var st=sanitize(JSON.parse(e.newValue));if(st){state=st;recomputeToday();manageTicker();renderAll();}}catch(_){}
+});
+if(window.matchMedia){
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){renderHeader();applyTheme();});}catch(e){}
+}
+
+/* ───────── 啟動 ───────── */
+(function init(){
+  $$('[data-icon]').forEach(function(el){el.innerHTML=icon(el.dataset.icon,+el.dataset.size||22);});
+  var r=loadState();state=r.st;
+  buildSettings();
+  applyTheme();
+  recomputeToday();
+  if(r.problem==='corrupt')setBanner('notice','儲存的資料已損毀，已改用空白資料重新開始。如果你有 JSON 備份，可以到「設定」匯入。');
+  if(r.problem==='blocked')setBanner('storage','這個瀏覽器目前不允許網站儲存資料，關閉頁面後內容會消失。請先到「設定」匯出備份。');
+  renderAll();
+  tick();manageTicker();manageWake();
+  save();
+})();
+})();
+</script>
+
+</body>
+</html>
