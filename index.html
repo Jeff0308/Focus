@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="番茄鐘">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="focus-api-base" content="">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>番茄鐘</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -311,6 +313,20 @@ legend{padding:0}
   .t-name{font-size:18px}
   .mode,.t-count{font-size:13px}
 }
+.missed{display:flex;gap:12px;align-items:flex-start;margin:10px 0 0;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;background:var(--card);font-size:14px;line-height:1.5}
+.missed p{margin:0;flex:1;min-width:0}
+.missed b{display:block;margin-bottom:2px}
+.missed button{min-height:44px;min-width:44px;border:0;background:none;color:var(--accent-text);font-weight:600;padding:0 4px}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--seg);color:var(--muted-strong);margin-left:8px;vertical-align:1px;white-space:nowrap}
+.pill.ok{background:var(--fg);color:var(--bg)}
+.pill.warn{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:0 8px}
+.bg-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px 14px;border-top:1px solid var(--line)}
+.bg-actions .btn,.bg-actions .small-btn{flex:1 1 130px}
+.howto{margin:0;padding:0 0 4px 20px}
+.howto li{margin:0 0 6px}
+.adv-fields{display:flex;flex-direction:column;gap:6px;padding:10px 16px 14px}
+.adv-fields label{font-size:13px;font-weight:600}
+.adv-fields .hint2{font-size:12.5px;color:var(--muted-strong);margin:0 0 4px}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -333,6 +349,7 @@ legend{padding:0}
     <section id="page-focus" class="page" aria-label="專注">
       <h1 class="sr">專注</h1>
       <div class="task-block" id="taskBlock"></div>
+      <div class="missed" id="missed" role="status" hidden></div>
 
       <div class="timer" id="timer" data-mode="focus">
         <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -386,6 +403,57 @@ legend{padding:0}
       <h2 class="sec">鈴聲與提醒</h2>
       <div class="group" id="gAlert"></div>
 
+      <h2 class="sec sub">背景提醒</h2>
+      <div class="group" id="gBg"></div>
+      <p class="msg" id="bgMsg" role="status" aria-live="polite"></p>
+      <p class="note">背景提醒與「鈴聲」是兩件事：切到其他 App 或鎖定後，網頁本身會被 iOS 暫停，不能自己響鈴；能響的是由伺服器（Web Push）或原生 App 排程的「系統通知」，聲音是 iOS 的通知音。</p>
+      <details class="about" id="bgHow" style="margin-top:8px">
+        <summary>iPhone 設定教學與疑難排解</summary>
+        <div id="howPwa">
+          <p><b>網頁版（需要 iOS 16.4 以上、HTTPS 網址）</b></p>
+          <ol class="howto">
+            <li>用 <b>Safari</b> 開啟本頁的 HTTPS 網址。</li>
+            <li>點下方的「分享」→「加入主畫面」→「加入」。</li>
+            <li>回到主畫面，<b>從新的圖示開啟</b>（不是從 Safari 開）。</li>
+            <li>進入「設定 → 背景提醒」，按「啟用背景提醒」，在跳出的視窗按「允許」。</li>
+            <li>按「測試通知」，然後立刻鎖定螢幕，確認約 5 秒後收到通知。</li>
+          </ol>
+        </div>
+        <div id="howNative" hidden>
+          <p><b>原生 App 版</b></p>
+          <ol class="howto">
+            <li>進入「設定 → 背景提醒」，按「啟用背景提醒」並允許通知。</li>
+            <li>按「測試通知」，鎖定螢幕確認收到。</li>
+            <li>每次開始計時，iOS 會替你排好結束通知；不必讓 App 留在前景。</li>
+          </ol>
+        </div>
+        <div id="howIssues">
+          <p><b>如果收不到通知，依序檢查：</b></p>
+          <ol class="howto">
+            <li>iPhone「設定 → 通知 → 番茄鐘」：允許通知、聲音都要開。</li>
+            <li>側邊靜音開關、音量、「專注模式／勿擾」會讓通知靜音或不顯示。</li>
+            <li>網頁版：必須從主畫面圖示開啟；Safari 分頁不支援。</li>
+            <li>網路或低電量模式可能延遲推播；推播不保證準時。</li>
+            <li>仍然不行：停用後重新啟用，並到下方「進階設定與診斷」開啟診斷模式，複製紀錄。</li>
+          </ol>
+        </div>
+      </details>
+      <details class="about" id="bgAdv" style="margin-top:0">
+        <summary>進階設定與診斷</summary>
+        <div class="group">
+          <div class="adv-fields">
+            <label for="bgApi">推播伺服器網址</label>
+            <p class="hint2">留空＝使用本網站同一個網址（建議）。前端與伺服器分開部署時才需要填寫，必須是 https://。</p>
+            <input class="input" id="bgApi" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://focus-push.example.com">
+            <label for="bgKey" style="margin-top:6px">註冊金鑰（伺服器有設定時才需要）</label>
+            <input class="input" id="bgKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="選填">
+            <p class="msg" id="bgAdvMsg" role="status" style="margin:4px 0 0"></p>
+            <button type="button" class="small-btn" data-action="bg-adv-save">儲存</button>
+          </div>
+          <div id="gDiag"></div>
+        </div>
+      </details>
+
       <h2 class="sec sub">鈴聲選擇</h2>
       <div class="group" id="gTone"></div>
       <p class="msg" id="toneMsg" role="status" aria-live="polite"></p>
@@ -407,10 +475,10 @@ legend{padding:0}
 
       <details class="about">
         <summary>關於背景計時與提醒</summary>
-        <p>番茄鐘以「結束時間」計算剩餘時間，不是每秒減一。切換 App 或鎖定螢幕後回到本頁，會立即顯示正確的剩餘時間，或已結束的狀態。</p>
-        <p>iPhone 的網頁在背景或鎖定螢幕時，不保證繼續執行，所以結束的那一刻不一定會有聲音、震動或通知。需要準時提醒時，請保持本頁在前景並開啟「保持螢幕亮著」。</p>
-        <p>網頁通知與網頁內音效是兩件不同的事，授權與否互不影響。iPhone 側邊的靜音開關開啟時，網頁音效可能不會發出聲音，音量也受手機系統音量限制。</p>
-        <p>網頁在背景或鎖定螢幕時若被 iOS 暫停，回到本頁後只會顯示已結束的狀態，不會補播鈴聲。第一次使用鈴聲前，請先按一次「開始專注」或「試聽」，讓 iOS 允許網頁發出聲音。</p>
+        <p><b>計時</b>：番茄鐘以「結束時間」計算剩餘時間，不是每秒減一。切換 App、鎖定螢幕或重新開啟後，會立即顯示正確的剩餘時間或已結束的狀態。</p>
+        <p><b>背景提醒</b>：iPhone 會在背景或鎖定時暫停網頁，網頁自己無法在結束那一刻響鈴、震動或發通知（「保持螢幕亮著」也只在螢幕亮著、頁面在前景時有效）。若沒有啟用背景提醒，回到本頁時會顯示「錯過了一個提醒」，不會假裝當時已響過。</p>
+        <p><b>可行的辦法</b>：把網站加入主畫面並啟用背景提醒（伺服器透過 Web Push 送系統通知），或使用原生 App（iOS 本機通知）。這些通知的聲音是 iOS 的通知音，受通知設定、專注模式、靜音開關與網路影響，不保證準時。</p>
+        <p><b>鈴聲</b>：內建與自訂鈴聲只在網頁位於前景時播放。第一次使用前，請先按一次「開始專注」或「試聽」，讓 iOS 允許網頁發出聲音。</p>
       </details>
     </section>
   </main>
@@ -483,8 +551,9 @@ var state, storageOk=true, bannerKind=null;
 var ui={note:'',previewId:null,toneStage:'focus',page:'focus',filter:'open',range:'today',metric:'poms',dayKey:'',today:{poms:0,mins:0,done:0},last:'',btnKey:''};
 
 function durMs(mode,s){return (mode==='focus'?s.focus:mode==='short'?s.short:s.long)*60000;}
-function newTimer(mode,s){var p=durMs(mode,s);return {mode:mode,status:'idle',planMs:p,remainMs:p,endAt:0,startedAt:0,taskId:null,taskName:'',lastSeen:0};}
-function defaultState(){return {app:'focus',v:1,settings:freshSettings(),tasks:[],doneLog:[],log:[],currentTaskId:null,streak:0,timer:newTimer('focus',DEFAULTS)};}
+function newTimer(mode,s){var p=durMs(mode,s);return {mode:mode,status:'idle',planMs:p,remainMs:p,endAt:0,startedAt:0,taskId:null,taskName:'',lastSeen:0,phaseId:''};}
+function mkPhaseId(ts){return 'p'+Math.round(ts).toString(36)+Math.random().toString(36).slice(2,6).replace(/[^a-z0-9]/g,'x');}
+function defaultState(){return {app:'focus',v:1,settings:freshSettings(),tasks:[],doneLog:[],log:[],currentTaskId:null,streak:0,timer:newTimer('focus',DEFAULTS),alerts:[],missed:[]};}
 
 function sanitizeTimer(t,s){
   if(!t||['focus','short','long'].indexOf(t.mode)<0)return newTimer('focus',s);
@@ -493,7 +562,9 @@ function sanitizeTimer(t,s){
     var ok=false;
     if(t.status==='running'&&isNum(t.endAt)&&t.endAt>0){out.status='running';out.endAt=t.endAt;out.remainMs=plan;out.lastSeen=isNum(t.lastSeen)?t.lastSeen:0;ok=true;}
     else if(t.status==='paused'&&isNum(t.remainMs)){out.status='paused';out.remainMs=clamp(t.remainMs,1000,plan);ok=true;}
-    if(ok){out.planMs=plan;out.startedAt=isNum(t.startedAt)?t.startedAt:Date.now();out.taskId=typeof t.taskId==='string'?t.taskId:null;out.taskName=typeof t.taskName==='string'?t.taskName.slice(0,60):'';}
+    if(ok){out.planMs=plan;out.startedAt=isNum(t.startedAt)?t.startedAt:Date.now();
+      /* 舊資料沒有 phaseId：用 startedAt 產生固定的代號，多個分頁會得到同一個值 */
+      out.phaseId=(typeof t.phaseId==='string'&&/^[A-Za-z0-9_.-]{6,64}$/.test(t.phaseId))?t.phaseId:('L'+Math.round(out.startedAt).toString(36)+t.mode);out.taskId=typeof t.taskId==='string'?t.taskId:null;out.taskName=typeof t.taskName==='string'?t.taskName.slice(0,60):'';}
   }
   return out;
 }
@@ -534,7 +605,10 @@ function sanitize(raw){
   var doneLog=[];
   (Array.isArray(raw.doneLog)?raw.doneLog:[]).forEach(function(x){if(x&&isNum(x.ts))doneLog.push({id:typeof x.id==='string'?x.id:'',ts:x.ts});});
   var cur=typeof raw.currentTaskId==='string'?tasks.filter(function(t){return t.id===raw.currentTaskId&&!t.completed;})[0]:null;
-  return {app:'focus',v:1,settings:s,tasks:tasks,doneLog:doneLog,log:log,currentTaskId:cur?cur.id:null,streak:clamp(toInt(raw.streak,0),0,100000),timer:sanitizeTimer(raw.timer,s)};
+  var alerts=[],missed=[];
+  (Array.isArray(raw.alerts)?raw.alerts:[]).forEach(function(a){if(a&&typeof a.pid==='string'&&a.pid.length<=70&&isNum(a.endAt)&&isNum(a.at))alerts.push({pid:a.pid,mode:MODE_NAME[a.mode]?a.mode:'focus',endAt:a.endAt,at:a.at,how:['played','late','hidden','missed'].indexOf(a.how)>=0?a.how:'missed'});});
+  (Array.isArray(raw.missed)?raw.missed:[]).forEach(function(a){if(a&&typeof a.pid==='string'&&a.pid.length<=70&&isNum(a.endAt)&&MODE_NAME[a.mode])missed.push({pid:a.pid,mode:a.mode,endAt:a.endAt,at:isNum(a.at)?a.at:a.endAt});});
+  return {app:'focus',v:1,settings:s,tasks:tasks,doneLog:doneLog,log:log,currentTaskId:cur?cur.id:null,streak:clamp(toInt(raw.streak,0),0,100000),timer:sanitizeTimer(raw.timer,s),alerts:alerts.slice(-30),missed:missed.slice(-10)};
 }
 
 function loadState(){
@@ -569,8 +643,9 @@ function findTask(id){for(var i=0;i<state.tasks.length;i++)if(state.tasks[i].id=
 
 function beginAt(ts){
   var t=state.timer;
-  t.startedAt=ts;t.status='running';t.endAt=ts+t.planMs;t.lastSeen=Date.now();
+  t.startedAt=ts;t.status='running';t.endAt=ts+t.planMs;t.lastSeen=Date.now();t.phaseId=mkPhaseId(ts);
   if(t.mode==='focus'){var task=findTask(state.currentTaskId);t.taskId=task?task.id:null;t.taskName=task?task.name:'';}
+  dlog('phase-begin',{mode:t.mode,phase:t.phaseId,plannedEnd:hhmm(t.endAt),planMin:Math.round(t.planMs/60000)});
 }
 
 function logInterrupted(reason,now){
@@ -580,8 +655,13 @@ function logInterrupted(reason,now){
   state.log.push({id:uid(),type:'interrupted',start:t.startedAt||now-el,end:now,planned:Math.round(t.planMs/1000),actual:Math.round(el/1000),taskId:task?task.id:t.taskId,taskName:task?task.name:(t.taskName||''),reason:reason});
 }
 
+var ON_TIME_MS=3000, LATE_MS=60000;
+function hasAlert(pid){for(var i=0;i<state.alerts.length;i++)if(state.alerts[i].pid===pid)return true;return false;}
+
+/* 每個階段只會完成一次：以 phaseId 去重（重複事件、多個分頁、重新整理都不會重複計入或重複響鈴） */
 function completePhase(endTs,now){
-  var t=state.timer, prev=t.mode, fresh=now-endTs<60000, next, skipped=false;
+  var t=state.timer, prev=t.mode, pid=t.phaseId||(prev+':'+t.startedAt), late=now-endTs, next, skipped=false;
+  if(hasAlert(pid)){dlog('phase-duplicate-ignored',{phase:pid});return false;}
   if(prev==='focus'){
     var task=findTask(t.taskId||state.currentTaskId);
     var sec=Math.round(t.planMs/1000), st0=t.startedAt||endTs-t.planMs;
@@ -598,12 +678,31 @@ function completePhase(endTs,now){
     if(endTs+state.timer.planMs>now)beginAt(endTs);
     else if(next!=='focus'){state.timer=newTimer('focus',state.settings);skipped=true;}   // 背景期間休息也已過完：直接回到待命的專注，不補算
   }
-  announce(prev,next,endTs,fresh,skipped);
+  var how='missed';
+  try{how=announce(prev,next,endTs,late,skipped,pid);}catch(e){dlog('announce-error',{m:String(e&&e.message)});}
+  state.alerts.push({pid:pid,mode:prev,endAt:endTs,at:now,how:how});
+  if(state.alerts.length>30)state.alerts.splice(0,state.alerts.length-30);
+  return true;
 }
 
-/* 完成提醒：訊息一律依「實際」計時狀態產生；鈴聲只在剛結束（60 秒內）時播放一次，錯過的不補播 */
-function announce(prev,next,endTs,fresh,skipped){
-  var auto=state.timer.status==='running',msg;
+function markMissed(pid,mode,endTs,now){
+  for(var i=0;i<state.missed.length;i++)if(state.missed[i].pid===pid)return;
+  state.missed.push({pid:pid,mode:mode,endAt:endTs,at:now});
+  if(state.missed.length>10)state.missed.shift();
+  for(var j=0;j<state.alerts.length;j++)if(state.alerts[j].pid===pid)state.alerts[j].how='missed';
+}
+
+/* 完成提醒。訊息一律依「實際」計時狀態與「實際處理時間」產生，不假裝當時已經響過：
+ *  played：準時（3 秒內）且頁面在前景 → 立即播放
+ *  late  ：頁面回到前景時才處理（60 秒內）→ 現在補播一次並註明晚了多久
+ *  hidden：頁面在背景卻剛好能執行（電腦瀏覽器常見）→ 盡力嘗試播放，失敗就記為錯過
+ *  missed：超過 60 秒才處理 → 不補播，顯示「錯過的提醒」 */
+function announce(prev,next,endTs,late,skipped,pid){
+  var auto=state.timer.status==='running',msg,vis=document.visibilityState==='visible',how;
+  if(vis&&late<=ON_TIME_MS)how='played';
+  else if(vis&&late<LATE_MS)how='late';
+  else if(!vis&&late<LATE_MS)how='hidden';
+  else how='missed';
   if(prev==='focus'){
     msg='專注完成，一顆番茄鐘入帳！';
     if(skipped)msg+='休息時間也已過去，回到專注。';
@@ -612,19 +711,24 @@ function announce(prev,next,endTs,fresh,skipped){
     msg=MODE_NAME[prev]+'結束。';
     msg+=auto?'已自動開始專注。':'準備回到專注。';
   }
-  if(!fresh)msg+='（'+hhmm(endTs)+' 已結束，當時頁面在背景，沒有播放鈴聲）';
+  if(how==='late')msg+='（'+hhmm(endTs)+' 已結束，晚了 '+Math.round(late/1000)+' 秒才處理）';
+  if(how==='missed')msg+='（'+hhmm(endTs)+' 已結束，當時網頁在背景，沒有播放鈴聲）';
+  dlog('phase-complete',{phase:pid,mode:prev,plannedEnd:hhmm(endTs),handledAt:hhmm(Date.now()),lateMs:late,vis:document.visibilityState,how:how});
   ui.note=msg;
-  toast(msg,fresh?4500:6500);
-  if(!fresh)return;
+  toast(msg,how==='played'?4500:6500);
+  if(how==='missed'){markMissed(pid,prev,endTs,Date.now());return how;}
   playTone(toneFor(prev),{}).then(function(r){
+    dlog('audio',{ok:!!(r&&r.ok),reason:r&&r.reason,fallback:!!(r&&r.fallback),ctx:actx&&actx.state,vis:document.visibilityState});
     if(r&&r.fallback)toast('自訂鈴聲無法讀取，已改用預設鈴聲',3500);
-    else if(r&&r.reason==='blocked')toast('iOS 暫時封鎖了網頁音效，點一下畫面即可恢復',4000);
+    else if(r&&r.reason==='blocked'){
+      toast('iOS 封鎖了網頁音效，這次沒有響鈴。點一下畫面即可恢復',4000);
+      if(how==='hidden'){markMissed(pid,prev,endTs,Date.now());save();renderMissed();}
+    }
   });
-  try{if(state.settings.vibrate&&navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}
-  try{
-    if(state.settings.notify&&document.hidden&&'Notification' in window&&Notification.permission==='granted')
-      new Notification('番茄鐘',{body:msg,tag:'focus-phase'});
-  }catch(e){}
+  try{if(state.settings.vibrate&&navigator.vibrate&&vis)navigator.vibrate([200,100,200]);}catch(e){}
+  /* 頁面在背景還能執行時的備援通知：走 Service Worker（iOS 沒有 new Notification）。已啟用伺服器推播時不重複發。 */
+  if(state.settings.notify&&!vis&&!(bg.enabled&&bg.syncState==='ok'))showLocal('番茄鐘',msg,pid);
+  return how;
 }
 
 /* 兩個分頁同時開著時，另一個分頁可能已先完成這個階段：改採用已儲存的狀態，避免重複記錄 */
@@ -634,7 +738,7 @@ function adoptStoredIfAdvanced(){
     var raw=localStorage.getItem(KEY);if(!raw)return false;
     var st=sanitize(JSON.parse(raw));if(!st)return false;
     var a=st.timer,b=state.timer;
-    if(a.status==='running'&&a.mode===b.mode&&a.startedAt===b.startedAt)return false;
+    if(a.status==='running'&&a.phaseId===b.phaseId)return false;
     state=st;return true;
   }catch(e){return false;}
 }
@@ -647,14 +751,16 @@ function manageTicker(){
 function tick(){
   var now=Date.now(),t=state.timer;
   if(t.status==='running'){
-    if(t.lastSeen&&now<t.lastSeen-2000)t.endAt-=(t.lastSeen-now);   // 系統時間往回調：保留剩餘時間
+    if(t.lastSeen&&now<t.lastSeen-2000){t.endAt-=(t.lastSeen-now);dlog('clock-moved-back',{ms:t.lastSeen-now});}   // 系統時間往回調：保留剩餘時間
     t.lastSeen=now;
     if(now>=t.endAt){
       if(adoptStoredIfAdvanced()){recomputeToday();manageTicker();manageWake();renderAll();return;}
-      completePhase(t.endAt,now);
-      recomputeToday();save();manageTicker();manageWake();renderAll();
+      var prevMode=t.mode;
+      if(!completePhase(t.endAt,now))state.timer=newTimer(prevMode,state.settings);   // 已處理過：回到待命，不重複計數
+      recomputeToday();save();manageTicker();manageWake();renderAll();scheduleSync('phase-complete');
       return;
     }
+    nativeFgGuard(now);
   }
   var k=dayKey(now);
   if(k!==ui.dayKey){recomputeToday();renderHeader();renderOverview();if(ui.page==='stats')renderStats();}
@@ -664,13 +770,16 @@ function tick(){
 function afterTimerChange(){
   ui.note='';
   save();manageTicker();manageWake();renderTaskBlock();renderTimer(true);renderOverview();
+  scheduleSync('change');
 }
 function startTimer(){
   var t=state.timer,now=Date.now();
   if(t.status==='running')return;
   unlockAudio();stopSound();warmTones();      // 在使用者手勢中啟用音訊，並預先解碼自訂鈴聲
+  if(state.missed.length){state.missed=[];renderMissed();}
   if(t.status==='idle'){t.remainMs=t.planMs;beginAt(now);}
-  else{t.status='running';t.endAt=now+t.remainMs;t.lastSeen=now;}
+  else{t.status='running';t.endAt=now+t.remainMs;t.lastSeen=now;dlog('resume',{phase:t.phaseId,plannedEnd:hhmm(t.endAt)});}
+  nativeGuard=null;
   afterTimerChange();
 }
 function pauseTimer(){
@@ -679,6 +788,7 @@ function pauseTimer(){
   var rem=remaining(now);
   if(rem<=0){tick();return;}
   t.remainMs=rem;t.status='paused';t.endAt=0;
+  dlog('pause',{phase:t.phaseId,remainSec:Math.round(rem/1000)});
   afterTimerChange();
 }
 function toggleTimer(){if(state.timer.status==='running')pauseTimer();else startTimer();}
@@ -691,6 +801,7 @@ function resetTimer(){
   if(t.status==='idle'&&el===0){toast('已是完整時間');return;}
   function apply(){
     var tt=state.timer;
+    dlog('reset',{phase:tt.phaseId,mode:tt.mode});
     logInterrupted('reset',Date.now());
     state.timer=newTimer(tt.mode,state.settings);
     afterTimerChange();toast('已重設');
@@ -707,6 +818,7 @@ function skipPhase(){
   var t=state.timer,now=Date.now(),el=elapsed(now),prev=t.mode;
   function apply(){
     var tt=state.timer,n=Date.now();
+    dlog('skip',{phase:tt.phaseId,mode:tt.mode});
     logInterrupted('skip',n);
     var next=tt.mode==='focus'?'short':'focus';
     state.timer=newTimer(next,state.settings);
@@ -835,6 +947,15 @@ function renderTimer(force){
   $('#btnReset').disabled=(t.status==='idle'&&t.remainMs===t.planMs);
   if(t.status==='running')document.title=pad(mm)+':'+pad(ss)+' '+MODE_NAME[t.mode]+' · 番茄鐘';
   else document.title=t.status==='paused'?'已暫停 '+pad(mm)+':'+pad(ss)+' · 番茄鐘':'番茄鐘';
+}
+function renderMissed(){
+  var el=$('#missed');if(!el)return;
+  var m=state.missed;
+  if(!m.length){el.hidden=true;el.innerHTML='';return;}
+  var last=m[m.length-1];
+  var tail=bg.enabled?'你已啟用背景提醒：系統通知有沒有送達，網頁無法確認，請看通知中心。':'目前沒有啟用背景提醒；到「設定 → 背景提醒」可以改善。';
+  el.innerHTML='<p><b>'+(m.length>1?'錯過了 '+m.length+' 個提醒':'錯過了一個提醒')+'</b>'+esc(MODE_NAME[last.mode])+'已在 '+hhmm(last.endAt)+' 結束。當時網頁在背景，沒有執行，也沒有播放鈴聲。'+esc(tail)+'</p><button type="button" data-action="missed-dismiss">知道了</button>';
+  el.hidden=false;
 }
 function renderOverview(){
   var o=ui.today,g=state.settings.goal;
@@ -1010,8 +1131,10 @@ function buildSettings(){
   $('#gAlert').innerHTML=switchRow('sound','計時結束音效','')+
     '<div class="row"><div class="row-l"><div class="row-t">音量</div></div><div class="vol"><input type="range" id="volume" min="0" max="100" step="5" aria-label="音量"><button type="button" class="small-btn" data-action="preview-sound" aria-label="試聽目前鈴聲">試聽</button></div></div>'+
     (canVibrate?switchRow('vibrate','震動回饋','計時結束時震動'):'<div class="row"><div class="row-l"><div class="row-t">震動回饋</div><div class="row-s">此瀏覽器不支援網頁震動（iPhone 的 Safari 目前不支援）。</div></div></div>')+
-    switchRow('notify','網頁通知','')+
-    (canWake?switchRow('wakeLock','計時時保持螢幕亮著','減少 iPhone 鎖定螢幕造成計時頁被暫停的機會，會多耗電'):'<div class="row"><div class="row-l"><div class="row-t">計時時保持螢幕亮著</div><div class="row-s">此瀏覽器不支援螢幕常亮。可更新 iOS，或計時時手動保持螢幕開啟；計時本身仍以結束時間計算，不受影響。</div></div></div>');
+    switchRow('notify','網頁通知（頁面仍在執行時）','電腦瀏覽器等頁面仍能執行的情況；iPhone 請改用下方「背景提醒」')+
+    (canWake?switchRow('wakeLock','計時時保持螢幕亮著','只在螢幕亮著、頁面在前景時有效，無法讓鎖定後的網頁繼續執行；會多耗電'):'<div class="row"><div class="row-l"><div class="row-t">計時時保持螢幕亮著</div><div class="row-s">此瀏覽器不支援螢幕常亮。可更新 iOS，或計時時手動保持螢幕開啟；計時本身仍以結束時間計算，不受影響。</div></div></div>');
+  $('#gDiag').innerHTML=switchRow('diag','診斷模式','記錄計時、頁面可見狀態、音訊與推播流程（不含金鑰）')+'<div class="bg-actions"><button type="button" class="small-btn" data-action="diag-open">查看診斷紀錄</button></div>';
+  $('#bgApi').value=bg.apiBase;$('#bgKey').value=bg.regKey;
   $('#themeSeg').innerHTML=[['system','跟隨系統'],['light','淺色'],['dark','深色']].map(function(x){return '<button type="button" role="radio" data-action="theme-opt" data-v="'+x[0]+'" aria-checked="false">'+x[1]+'</button>';}).join('');
   $('#volume').addEventListener('input',function(e){
     state.settings.volume=toInt(e.target.value,60);save();
@@ -1025,9 +1148,9 @@ function buildSettings(){
   });
 }
 function notifStatus(){
-  if(!('Notification' in window))return {t:'此瀏覽器不支援網頁通知。計時結束後請回到本頁，畫面會顯示正確狀態。',ok:false};
+  if(!('Notification' in window))return {t:'此瀏覽器目前不支援網頁通知（iPhone 的 Safari 分頁不支援；加入主畫面後，請改用下方「背景提醒」）。',ok:false};
   var p=Notification.permission;
-  if(p==='granted')return {t:'已授權。只在本頁仍在執行時才能發出通知，鎖定螢幕或被系統暫停後無法保證提醒。',ok:true};
+  if(p==='granted')return {t:'已授權。這個開關只在頁面仍能執行時才會發出通知；鎖定螢幕或被系統暫停後，靠的是下方的「背景提醒」。',ok:true};
   if(p==='denied')return {t:'通知已被封鎖。請到瀏覽器的網站設定開啟。',ok:false};
   return {t:'尚未授權。開啟時會詢問你。',ok:false};
 }
@@ -1038,6 +1161,7 @@ function syncSettings(){
   $$('[data-action="switch"]').forEach(function(b){
     var k=b.dataset.key,on=!!s[k];
     if(k==='notify')on=s.notify&&notifStatus().ok;
+    if(k==='diag')on=bg.diag;
     b.setAttribute('aria-checked',on?'true':'false');
   });
   var ns=$('#sub-notify');
@@ -1046,6 +1170,7 @@ function syncSettings(){
   $('#volume').value=s.volume;$('#volume').disabled=!s.sound;
   $$('[data-action="theme-opt"]').forEach(function(b){b.setAttribute('aria-checked',b.dataset.v===s.theme?'true':'false');});
   $('#settingsNote').hidden=state.timer.status==='idle';
+  renderBg();
 }
 function setSetting(key,val){
   var s=state.settings;s[key]=val;
@@ -1070,6 +1195,12 @@ function toggleSwitch(key){
       if(res&&res.then)res.then(afterPerm,function(){afterPerm('denied');});
     }catch(e){afterPerm('denied');}
     return;
+  }
+  if(key==='diag'){
+    bg.diag=!bg.diag;saveBg();
+    if(bg.diag){loadDiag();dlog('diag-on',{vis:document.visibilityState});toast('診斷模式已開啟');}
+    else{dbuf=[];try{localStorage.removeItem(DIAGKEY);}catch(e){}toast('診斷模式已關閉，紀錄已清除');}
+    syncSettings();return;
   }
   if(key==='toneSame'){setToneSame(!s.toneSame);return;}
   setSetting(key,!s[key]);
@@ -1097,7 +1228,7 @@ function toneFor(mode){
 function getCtx(){
   if(actx)return actx;
   var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
-  try{actx=new AC();}catch(e){actx=null;}
+  try{actx=new AC();actx.onstatechange=function(){dlog('audioctx-state',{s:actx&&actx.state});};}catch(e){actx=null;}
   return actx;
 }
 /* 只在使用者手勢（開始、試聽、選鈴聲…）中呼叫：建立／恢復 AudioContext，並播一段無聲緩衝讓 iOS 解鎖 */
@@ -1521,6 +1652,439 @@ function manageWake(){
   }else if(!want&&wl){try{wl.release();}catch(e){}wl=null;}
 }
 
+/* ───────── 背景提醒：診斷、Service Worker、Web Push、原生本機通知 ─────────
+ * 先講清楚三件事（它們不是同一件事）：
+ *  ① 計時正確：以 endAt（時間戳）計算，不管頁面有沒有在執行，回來都能算出正確的剩餘時間。
+ *  ② 背景送達提醒：網頁在背景／鎖定時會被 iOS 暫停，自己無法準時做任何事。要在那個時間點「有東西響」，
+ *     只能由「頁面以外」的東西排程：伺服器 + Web Push（網頁 App），或 iOS 本機通知（原生 App）。
+ *  ③ iPhone 在背景發聲：那是「系統通知」的聲音，由 iOS 與使用者的通知／專注模式／靜音設定決定，
+ *     不是網頁裡的 Web Audio；自訂鈴聲只在網頁前景時使用。
+ */
+var BGKEY='focus.bg.v1', DIAGKEY='focus.diag.v1';
+var bg=loadBg();
+function loadBg(){
+  var o={};try{o=JSON.parse(localStorage.getItem(BGKEY)||'{}')||{};}catch(e){o={};}
+  return {enabled:o.enabled===true,
+    apiBase:typeof o.apiBase==='string'?o.apiBase.slice(0,200):'',regKey:typeof o.regKey==='string'?o.regKey.slice(0,100):'',
+    deviceId:/^[0-9a-f]{32}$/.test(o.deviceId||'')?o.deviceId:'',secret:(typeof o.secret==='string'&&o.secret.length>=20&&o.secret.length<=100)?o.secret:'',
+    diag:o.diag===true,seq:isNum(o.seq)?o.seq:0,nativeSound:typeof o.nativeSound==='string'?o.nativeSound.slice(0,40):'default',
+    syncState:'idle',lastSync:0,lastError:'',pushState:'unknown'};
+}
+function saveBg(){
+  try{localStorage.setItem(BGKEY,JSON.stringify({enabled:bg.enabled,apiBase:bg.apiBase,regKey:bg.regKey,deviceId:bg.deviceId,secret:bg.secret,diag:bg.diag,seq:bg.seq,nativeSound:bg.nativeSound}));}catch(e){}
+}
+
+/* ── 診斷紀錄（預設關閉；不記錄金鑰、token、訂閱端點） ── */
+var dbuf=[],dT=null;
+var SECRET_KEY=/secret|auth|token|key|p256dh|endpoint|bearer/i;
+function scrub(d){
+  if(d==null)return undefined;
+  if(typeof d!=='object')return String(d).slice(0,160);
+  var o={};
+  Object.keys(d).forEach(function(k){
+    if(SECRET_KEY.test(k))return;
+    var v=d[k];o[k]=(v&&typeof v==='object')?'[object]':(typeof v==='string'?v.slice(0,160):v);
+  });
+  return o;
+}
+function dlog(ev,data){
+  if(!bg.diag)return;
+  dbuf.push({t:Date.now(),v:document.visibilityState,e:ev,d:scrub(data)});
+  if(dbuf.length>300)dbuf.splice(0,dbuf.length-300);
+  clearTimeout(dT);dT=setTimeout(function(){try{localStorage.setItem(DIAGKEY,JSON.stringify(dbuf));}catch(e){}},400);
+}
+function loadDiag(){
+  try{var a=JSON.parse(localStorage.getItem(DIAGKEY)||'[]');if(Array.isArray(a))dbuf=a.filter(function(x){return x&&isNum(x.t)&&typeof x.e==='string';}).slice(-300);}catch(e){dbuf=[];}
+}
+function pad3(n){return n<10?'00'+n:n<100?'0'+n:''+n;}
+function diagText(){
+  var p=platform(),sup=bgSupport(),L=[];
+  L.push('番茄鐘診斷紀錄（不含金鑰、token 或推播端點）');
+  L.push('產生時間：'+dayKey(Date.now())+' '+hhmm(Date.now())+'（Asia/Taipei）');
+  L.push('平台：'+(p.native?'原生 App':p.iOS?('iOS '+(p.iosV?p.iosV.join('.'):'?')+(p.standalone?'（主畫面 App）':'（Safari 分頁）')):(p.standalone?'已安裝 App':'瀏覽器分頁'))+'｜HTTPS：'+(p.secure?'是':'否')+'｜Service Worker：'+(p.sw?'支援':'不支援')+'｜Push API：'+(p.push?'支援':'不支援')+'｜通知權限：'+p.perm);
+  L.push('背景提醒：'+(sup.ok?'可用（'+sup.kind+'）':'不可用（'+sup.reason+'）')+'｜已啟用：'+(bg.enabled?'是':'否')+'｜同步：'+bg.syncState+(bg.lastError?'（'+bg.lastError+'）':'')+'｜推播訂閱：'+bg.pushState);
+  try{L.push('伺服器：'+(new URL(apiUrl('/'),location.href).host||'同站'));}catch(e){}
+  L.push('計時器：'+state.timer.mode+' / '+state.timer.status+(state.timer.status==='running'?'｜預定結束 '+hhmm(state.timer.endAt)+'｜phase '+String(state.timer.phaseId).slice(0,8):''));
+  platformWarnings().forEach(function(w){L.push('⚠ '+w);});
+  L.push('────────────');
+  dbuf.forEach(function(e){
+    var d=tw(e.t);
+    L.push(pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())+'.'+pad3(e.t%1000)+' ['+(e.v==='visible'?'前景':e.v==='hidden'?'背景':e.v)+'] '+e.e+(e.d?' '+JSON.stringify(e.d):''));
+  });
+  if(!dbuf.length)L.push('（還沒有紀錄。請確認「診斷模式」已開啟，然後開始一次計時。）');
+  return L.join('\n');
+}
+function openDiag(){
+  openSheet('<h2 id="sheetTitle">診斷紀錄</h2><p class="sheet-body">記錄計時開始／暫停／結束、預定與實際處理時間、頁面可見狀態、音訊結果與推播流程。不含金鑰與 token。</p><textarea class="input" id="dgText" rows="10" readonly spellcheck="false" aria-label="診斷內容"></textarea>'+
+    '<div class="sheet-actions"><button type="button" class="btn ghost" id="dgClear">清除</button><button type="button" class="btn primary" id="dgCopy">複製</button></div><p class="msg" id="dgMsg" role="status"></p><div class="sheet-actions" style="margin-top:4px"><button type="button" class="btn ghost" data-sheet-close>關閉</button></div>',
+    function(root){
+      var ta=$('#dgText',root),msg=$('#dgMsg',root);ta.value=diagText();
+      $('#dgClear',root).addEventListener('click',function(){dbuf=[];try{localStorage.removeItem(DIAGKEY);}catch(e){}ta.value=diagText();msg.textContent='已清除。';});
+      $('#dgCopy',root).addEventListener('click',function(){
+        var text=ta.value;
+        function fb(){try{ta.focus();ta.select();ta.setSelectionRange(0,text.length);if(document.execCommand&&document.execCommand('copy')){msg.textContent='已複製。';return;}}catch(e){}msg.textContent='無法自動複製，內容已選取，請長按後選擇「拷貝」。';}
+        if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){msg.textContent='已複製。';},fb);else fb();
+      });
+    });
+}
+
+/* ── 平台偵測與支援狀態 ── */
+function platform(){
+  var ua=navigator.userAgent||'',iOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var m=ua.match(/OS (\d+)[_.](\d+)/),iosV=(iOS&&m)?[+m[1],+m[2]]:null,standalone=false,native=false;
+  try{standalone=!!navigator.standalone||(!!window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}catch(e){}
+  try{native=!!(window.Capacitor&&typeof Capacitor.isNativePlatform==='function'&&Capacitor.isNativePlatform()&&nativeLN());}catch(e){}
+  return {iOS:iOS,iosV:iosV,standalone:standalone,native:native,secure:window.isSecureContext===true,sw:'serviceWorker' in navigator,push:'PushManager' in window,notif:'Notification' in window,
+    perm:('Notification' in window)?Notification.permission:'unsupported'};
+}
+function bgSupport(){
+  var p=platform();
+  if(p.native)return {ok:true,kind:'native'};
+  if(!p.secure)return {ok:false,kind:'none',reason:'背景推播需要 HTTPS 網址（目前是 '+location.protocol+'）。請把網站部署到 HTTPS，步驟見部署說明。'};
+  if(p.iOS&&p.iosV&&(p.iosV[0]<16||(p.iosV[0]===16&&p.iosV[1]<4)))return {ok:false,kind:'none',reason:'iPhone 需要 iOS 16.4 或更新版本，才支援網頁推播。'};
+  if(p.iOS&&!p.standalone)return {ok:false,kind:'install',reason:'iPhone 的網頁推播只在「加入主畫面」的 App 裡可用，Safari 分頁不行。請先用 Safari 的「分享 → 加入主畫面」，再從主畫面圖示開啟。'};
+  var miss=[];if(!p.sw)miss.push('Service Worker');if(!p.push)miss.push('Push API');if(!p.notif)miss.push('Notification');
+  if(miss.length)return {ok:false,kind:'none',reason:'這個瀏覽器不支援網頁推播（缺少 '+miss.join('、')+'）。'};
+  return {ok:true,kind:'webpush'};
+}
+function platformWarnings(){
+  var p=platform(),w=[];
+  if(p.native){w.push('本機通知由 iOS 排程：不受網頁暫停影響，但仍受通知權限、專注模式、靜音開關與系統音量影響。');return w;}
+  if(p.iOS)w.push('iOS 會在背景或鎖定螢幕時暫停網頁的 JavaScript 與 Web Audio：結束時網頁本身不會響鈴。');
+  if(p.iOS&&!p.standalone)w.push('目前是 Safari 分頁：iOS 不允許分頁使用網頁推播。');
+  if(!p.secure)w.push('非 HTTPS：無法註冊 Service Worker 或使用推播。');
+  w.push('推播由 Apple／Google 的推播服務轉送，不保證準時；專注模式、低電量、網路與通知設定都可能延遲或靜音。');
+  w.push('系統通知的聲音是 iOS 的預設通知音，無法使用網頁匯入的自訂鈴聲。');
+  return w;
+}
+
+/* ── Service Worker ── */
+var swReg=null,swP=null;
+function registerSW(){
+  if(!('serviceWorker' in navigator)||window.isSecureContext!==true)return;
+  try{
+    swP=navigator.serviceWorker.register('sw.js',{scope:'./'}).then(function(r){swReg=r;dlog('sw-registered',{scope:r.scope});return r;},function(e){dlog('sw-register-failed',{reason:String(e&&e.message)});return null;});
+    navigator.serviceWorker.addEventListener('message',function(e){
+      var d=e.data||{};
+      dlog('sw-message',{type:d.type,tag:d.tag,kind:d.kind,pageVisible:d.visible});
+      if(d.type==='subscription-changed'){bg.pushState='changed';bg.syncState='needs-reenable';renderBg();}
+      if(d.type==='notification-click')tick();
+    });
+  }catch(e){dlog('sw-register-failed',{reason:String(e&&e.message)});}
+}
+function getSW(){
+  if(!('serviceWorker' in navigator)||window.isSecureContext!==true)return Promise.resolve(null);
+  return Promise.race([navigator.serviceWorker.ready,new Promise(function(r){setTimeout(function(){r(null);},8000);})]).catch(function(){return null;});
+}
+async function showLocal(title,body,tag){      // 透過 Service Worker 顯示通知（iOS 沒有 new Notification）
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted')return false;
+    var reg=await getSW();if(!reg)return false;
+    await reg.showNotification(title,{body:body,tag:tag||'focus-local'});return true;
+  }catch(e){dlog('local-notify-failed',{reason:String(e&&e.message)});return false;}
+}
+async function clearDelivered(){
+  try{var reg=swReg||(('serviceWorker' in navigator)?await navigator.serviceWorker.getRegistration():null);if(!reg)return;(await reg.getNotifications()).forEach(function(n){n.close();});}catch(e){}
+}
+
+/* ── 提醒內容與「接下來的階段」 ── */
+function endMessage(mode,next){
+  if(mode==='focus')return next?'專注結束，開始'+MODE_NAME[next]+'。':'專注結束，休息一下吧。';
+  return next?MODE_NAME[mode]+'結束，開始專注。':MODE_NAME[mode]+'結束，準備回到專注。';
+}
+var CHAIN_MAX=12;
+/* 目前階段（剩餘時間）+ 若開啟自動開始，接下來的各階段長度。只送「還有多久」，不送絕對時間。 */
+function chainFor(t,now){
+  var s=state.settings,items=[{mode:t.mode,ms:Math.max(0,remaining(now))}];
+  if(!s.autoStart)return items;
+  var st=state.streak,m=t.mode;
+  while(items.length<CHAIN_MAX){
+    var nm;
+    if(m==='focus'){st++;nm=(st%s.cycles===0)?'long':'short';}else nm='focus';
+    items.push({mode:nm,ms:durMs(nm,s)});m=nm;
+  }
+  return items;
+}
+
+/* ── 伺服器 API ── */
+function normApi(v){
+  v=String(v||'').trim().replace(/\/+$/,'');
+  if(!v)return '';
+  if(!/^https:\/\//i.test(v)&&!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(v))return null;
+  try{new URL(v);}catch(e){return null;}
+  return v;
+}
+function apiUrl(path){
+  var meta=document.querySelector('meta[name="focus-api-base"]'),base=(bg.apiBase||(meta&&meta.content)||'').trim().replace(/\/+$/,'');
+  return base+path;
+}
+async function api(method,path,body,authed){
+  var h={'Content-Type':'application/json'};
+  if(authed&&bg.secret)h.Authorization='Bearer '+bg.secret;
+  if(path==='/v1/devices'&&bg.regKey&&!bg.deviceId)h['X-Registration-Key']=bg.regKey;
+  var ctl=('AbortController' in window)?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort();},10000),r,j=null;
+  try{
+    r=await fetch(apiUrl(path),{method:method,headers:h,body:body?JSON.stringify(body):undefined,signal:ctl?ctl.signal:undefined,cache:'no-store',credentials:'omit'});
+    try{j=await r.json();}catch(e){}
+  }finally{clearTimeout(to);}
+  dlog('server',{method:method,path:path.replace(/[0-9a-f]{16,}/g,'…'),status:r.status,error:j&&j.error});
+  if(!r.ok){var err=new Error((j&&j.error)||('http_'+r.status));err.status=r.status;throw err;}
+  return j||{};
+}
+function errText(e){
+  var s=e&&e.status;
+  if(s===401)return '伺服器不認得這台裝置或註冊金鑰不正確。請停用後重新啟用。';
+  if(s===404)return '找不到推播伺服器。請確認網站是從推播伺服器部署的，或在「進階設定」填入正確的伺服器網址。';
+  if(s===429)return '操作太頻繁，請稍後再試。';
+  if(s===503)return '伺服器目前無法接受新裝置。';
+  if(s===400)return '伺服器拒絕了這個訂閱（'+(e.message||'bad_request')+'）。';
+  if(e&&(e.name==='AbortError'||e.name==='TypeError'))return '連不到推播伺服器（可能離線，或網址錯誤、伺服器沒有開放這個網站的 CORS）。';
+  return '發生錯誤：'+((e&&e.message)||'未知');
+}
+function b64uToBytes(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+function sameKey(sub,keyB64u){
+  try{var k=sub.options&&sub.options.applicationServerKey;if(!k)return true;var a=new Uint8Array(k),b=b64uToBytes(keyB64u);if(a.length!==b.length)return false;for(var i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true;}catch(e){return true;}
+}
+function setBgMsg(t,bad){var m=$('#bgMsg');if(!m)return;m.textContent=t||'';m.className='msg'+(bad?' bad':'');}
+
+/* ── 啟用／停用 ── */
+async function bgEnable(){
+  var sup=bgSupport();
+  dlog('enable-click',{kind:sup.kind,ok:sup.ok});
+  if(!sup.ok){setBgMsg(sup.reason,true);return;}
+  if(sup.kind==='native'){await nativeEnable();return;}
+  setBgMsg('正在啟用…');
+  try{
+    var perm=Notification.permission;
+    if(perm==='default')perm=await Notification.requestPermission();      // 只在使用者按下按鈕時詢問
+    dlog('permission',{result:perm});
+    if(perm!=='granted'){
+      setBgMsg(perm==='denied'?'通知權限被拒絕。請到 iPhone「設定 → 通知 → 番茄鐘」開啟「允許通知」，再回來按一次。':'沒有取得通知權限，背景提醒無法啟用。',true);
+      renderBg();return;
+    }
+    var reg=await getSW();
+    if(!reg)throw new Error('Service Worker 尚未就緒，請稍後再試');
+    var cfg=await api('GET','/v1/config');
+    var sub=await reg.pushManager.getSubscription();
+    if(sub&&!sameKey(sub,cfg.vapidPublicKey)){await sub.unsubscribe();sub=null;}
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToBytes(cfg.vapidPublicKey)});
+    bg.pushState='subscribed';dlog('subscribed',{});
+    var res;
+    try{res=await api('POST','/v1/devices',{subscription:sub.toJSON(),deviceId:bg.deviceId||undefined},!!bg.deviceId);}
+    catch(e){
+      if(e.status===401&&bg.deviceId){bg.deviceId='';bg.secret='';res=await api('POST','/v1/devices',{subscription:sub.toJSON()},false);}   // 伺服器不認得舊裝置：重新註冊
+      else throw e;
+    }
+    if(res.secret){bg.secret=res.secret;}
+    bg.deviceId=res.deviceId;bg.enabled=true;bg.syncState='idle';bg.lastError='';saveBg();
+    await bgSync('enable');
+    renderBg();
+    setBgMsg(bg.syncState==='ok'?'已啟用。建議立刻按「測試通知」並鎖定螢幕，確認這台 iPhone 真的收得到。':'已訂閱，但還沒同步成功：'+(bg.lastError||'請稍後再試'),bg.syncState!=='ok');
+  }catch(e){
+    dlog('enable-failed',{status:e&&e.status,name:e&&e.name,message:e&&e.message});
+    bg.lastError=errText(e);saveBg();renderBg();setBgMsg(bg.lastError,true);
+  }
+}
+async function bgDisable(silent){
+  var sup=bgSupport();
+  if(sup.kind==='native'){bg.enabled=false;saveBg();await nativeCancelAll();renderBg();if(!silent)setBgMsg('已停用本機通知。');return;}
+  bg.enabled=false;
+  try{if(bg.deviceId&&bg.secret)await api('DELETE','/v1/devices/'+bg.deviceId,null,true);}catch(e){dlog('delete-device-failed',{status:e&&e.status});}
+  try{var reg=await getSW();var sub=reg&&await reg.pushManager.getSubscription();if(sub)await sub.unsubscribe();}catch(e){}
+  bg.deviceId='';bg.secret='';bg.syncState='idle';bg.pushState='none';bg.lastError='';saveBg();
+  dlog('disabled',{});renderBg();
+  if(!silent)setBgMsg('已停用背景提醒，這台裝置的訂閱已從伺服器移除。');
+}
+
+/* ── 排程同步：開始、暫停、重設、跳過、進入下一階段都會呼叫 ── */
+var syncBusy=false,syncAgain=false,syncT=null;
+function scheduleSync(reason){
+  clearTimeout(syncT);
+  syncT=setTimeout(function(){syncT=null;bgSync(reason);nativeSync(reason);},120);
+}
+async function bgSync(reason){
+  if(!bg.enabled||!bg.deviceId||!bg.secret||bgSupport().kind!=='webpush')return;
+  if(syncBusy){syncAgain=true;return;}
+  syncBusy=true;
+  try{
+    do{
+      syncAgain=false;
+      var now=Date.now(),t=state.timer;
+      bg.seq=Math.max((bg.seq||0)+1,now);saveBg();            // 單調遞增：伺服器據此丟棄亂序或重送的舊請求
+      var body=(t.status==='running')?{seq:bg.seq,state:'running',phaseId:t.phaseId,items:chainFor(t,now)}:{seq:bg.seq,state:t.status==='paused'?'paused':'idle',phaseId:t.phaseId||''};
+      var r=await api('PUT','/v1/devices/'+bg.deviceId+'/timeline',body,true);
+      bg.syncState='ok';bg.lastSync=Date.now();bg.lastError='';
+      dlog('sync',{reason:reason,state:body.state,pending:r.pending,nextInMs:r.nextInMs,stale:r.stale});
+    }while(syncAgain);
+  }catch(e){
+    bg.syncState=(e&&e.status===401)?'needs-reenable':'error';bg.lastError=errText(e);
+    dlog('sync-failed',{reason:reason,status:e&&e.status,name:e&&e.name});
+  }finally{syncBusy=false;renderBg();}
+}
+async function bgVerify(){          // 啟動時核對：權限、訂閱是否還在
+  if(!bg.enabled)return;
+  var sup=bgSupport();
+  if(sup.kind==='native'){await nativeVerify();return;}
+  if(!sup.ok){bg.syncState='error';bg.lastError=sup.reason;renderBg();return;}
+  if(Notification.permission!=='granted'){bg.syncState='needs-reenable';bg.lastError='通知權限已被關閉。';renderBg();return;}
+  try{
+    var reg=await getSW(),sub=reg&&await reg.pushManager.getSubscription();
+    bg.pushState=sub?'subscribed':'none';
+    if(!sub){bg.syncState='needs-reenable';bg.lastError='推播訂閱已失效。';dlog('subscription-missing',{});renderBg();return;}
+  }catch(e){}
+  bgSync('verify');
+}
+async function bgTest(){
+  var sup=bgSupport();
+  dlog('test-click',{kind:sup.kind});
+  if(sup.kind==='native'){await nativeTest();return;}
+  if(!sup.ok){setBgMsg(sup.reason,true);return;}
+  if(Notification.permission!=='granted'){setBgMsg('尚未允許通知。請先按「啟用背景提醒」。',true);return;}
+  if(bg.enabled&&bg.deviceId&&bg.secret){
+    try{
+      await api('POST','/v1/devices/'+bg.deviceId+'/test',{delayMs:5000},true);
+      setBgMsg('已請伺服器在 5 秒後推送測試通知。請現在鎖定螢幕或切到其他 App，確認有收到。收不到時請看下方「如果收不到通知」。');
+    }catch(e){setBgMsg(errText(e),true);}
+  }else{
+    var ok=await showLocal('番茄鐘・本機測試','這則通知只驗證「通知能否顯示」，沒有經過伺服器推播。','focus-local-test');
+    setBgMsg(ok?'已顯示本機測試通知。要驗證背景推播，請先按「啟用背景提醒」。':'無法顯示通知，請確認通知權限與 Service Worker 狀態。',!ok);
+  }
+}
+function testChime(){
+  unlockAudio();var id=toneFor('focus');dlog('test-chime',{tone:id});
+  playTone(id,{preview:true}).then(function(r){
+    dlog('audio',{ok:!!(r&&r.ok),reason:r&&r.reason,ctx:actx&&actx.state});
+    reportPlay(r);
+    if(r&&r.ok)setBgMsg('已播放前景測試鈴聲。這只代表「網頁在前景時」能發聲，不代表鎖定螢幕或切到其他 App 時也會響。');
+  });
+}
+
+/* ── 原生 App（Capacitor 本機通知）：在 iOS 上排程階段結束通知 ── */
+var NATIVE_ID0=7100,NATIVE_N=12,nativeGuard=null;
+function nativeLN(){try{return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications||null;}catch(e){return null;}}
+function nativeIds(){var a=[];for(var i=0;i<NATIVE_N;i++)a.push({id:NATIVE_ID0+i});return a;}
+async function nativeCancelAll(){var LN=nativeLN();if(!LN)return;try{await LN.cancel({notifications:nativeIds()});}catch(e){dlog('native-cancel-failed',{m:String(e&&e.message)});}}
+async function nativePerm(ask){
+  var LN=nativeLN();if(!LN)return 'unsupported';
+  try{
+    var p=await LN.checkPermissions(),d=p&&p.display;
+    if(ask&&(d==='prompt'||d==='prompt-with-rationale')){p=await LN.requestPermissions();d=p&&p.display;}
+    nativePermCache=d||'unknown';return nativePermCache;
+  }catch(e){return 'error';}
+}
+async function nativeEnable(){
+  var d=await nativePerm(true);dlog('native-permission',{result:d});
+  if(d!=='granted'){
+    bg.enabled=false;saveBg();renderBg();
+    setBgMsg('通知權限沒有開啟。請到 iPhone「設定 → 通知 → 番茄鐘」開啟「允許通知」與「聲音」。',true);
+    try{var A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.openUrl&&d==='denied')A.openUrl({url:'app-settings:'});}catch(e){}
+    return;
+  }
+  bg.enabled=true;saveBg();
+  try{LN_listen();}catch(e){}
+  await nativeSync('enable');renderBg();
+  setBgMsg('已啟用本機通知。計時開始時，iOS 會排好結束時間的通知；建議按「測試通知」並鎖定螢幕確認。');
+}
+var listening=false;
+function LN_listen(){
+  var LN=nativeLN();if(!LN||listening||!LN.addListener)return;listening=true;
+  LN.addListener('localNotificationReceived',function(n){dlog('native-received',{id:n&&n.id});});
+  LN.addListener('localNotificationActionPerformed',function(n){dlog('native-tapped',{id:n&&n.notification&&n.notification.id});tick();});
+}
+async function nativeVerify(){
+  var d=await nativePerm(false);
+  if(d!=='granted'){bg.syncState='needs-reenable';bg.lastError='通知權限已被關閉。';renderBg();return;}
+  LN_listen();nativeSync('verify');
+}
+async function nativeSync(reason){
+  var LN=nativeLN();
+  if(!LN||!bg.enabled||!platform().native)return;
+  var t=state.timer,now=Date.now();
+  await nativeCancelAll();
+  if(t.status!=='running'){bg.syncState='ok';bg.lastSync=Date.now();renderBg();return;}
+  var items=chainFor(t,now),at=t.endAt,list=[];
+  for(var i=0;i<items.length;i++){
+    if(i>0)at+=items[i].ms;
+    if(at<=now+500)continue;
+    var next=items[i+1]?items[i+1].mode:null,n={id:NATIVE_ID0+i,title:'番茄鐘',body:endMessage(items[i].mode,next),schedule:{at:new Date(at),allowWhileIdle:true},threadIdentifier:'focus-pomodoro',extra:{phaseId:t.phaseId,index:i}};
+    if(bg.nativeSound&&bg.nativeSound!=='default')n.sound=bg.nativeSound;
+    list.push(n);
+  }
+  try{
+    if(list.length)await LN.schedule({notifications:list});
+    bg.syncState='ok';bg.lastSync=Date.now();bg.lastError='';
+    dlog('native-scheduled',{reason:reason,count:list.length,firstAt:list[0]&&hhmm(list[0].schedule.at.getTime())});
+  }catch(e){bg.syncState='error';bg.lastError='排程本機通知失敗：'+String(e&&e.message||e).slice(0,80);dlog('native-schedule-failed',{m:String(e&&e.message)});}
+  renderBg();
+}
+/* 前景時，iOS 本機通知仍會跳出橫幅並響聲，會和網頁內鈴聲重複：最後 2.5 秒取消第一則，回到背景時再補排。 */
+function nativeFgGuard(now){
+  var t=state.timer;
+  if(!bg.enabled||t.status!=='running'||document.hidden||nativeGuard===t.phaseId||!platform().native)return;
+  if(t.endAt-now<=2500){
+    nativeGuard=t.phaseId;
+    var LN=nativeLN();if(LN)LN.cancel({notifications:[{id:NATIVE_ID0}]}).then(function(){dlog('native-guard-cancel',{phase:t.phaseId.slice(0,8)});},function(){});
+  }
+}
+async function nativeTest(){
+  var LN=nativeLN(),d=await nativePerm(true);
+  if(d!=='granted'){setBgMsg('通知權限沒有開啟，請到 iPhone「設定 → 通知 → 番茄鐘」開啟。',true);return;}
+  var n={id:NATIVE_ID0+90,title:'番茄鐘・測試通知',body:'收到這則通知，代表本機通知正常。',schedule:{at:new Date(Date.now()+5000),allowWhileIdle:true}};
+  if(bg.nativeSound&&bg.nativeSound!=='default')n.sound=bg.nativeSound;
+  try{await LN.schedule({notifications:[n]});setBgMsg('已排程 5 秒後的測試通知。請現在鎖定螢幕或切到其他 App；若沒聲音，請檢查靜音開關、專注模式與音量。');}
+  catch(e){setBgMsg('排程失敗：'+String(e&&e.message||e).slice(0,80),true);}
+}
+
+/* ── 設定頁「背景提醒」區塊 ── */
+function bgStatus(){
+  var sup=bgSupport(),p=platform();
+  if(sup.kind==='native'){
+    if(!bg.enabled)return {label:'未啟用',tone:'',text:'啟用後，每次開始計時，iOS 會排好結束時間的本機通知；即使 App 被暫停也會送出（仍受通知權限、專注模式、靜音開關影響）。'};
+    if(bg.syncState==='needs-reenable')return {label:'需要處理',tone:'warn',text:bg.lastError||'請重新啟用。'};
+    if(bg.syncState==='error')return {label:'排程失敗',tone:'warn',text:bg.lastError};
+    return {label:'已啟用',tone:'ok',text:'結束時間已交給 iOS 排程'+(bg.lastSync?'（'+hhmm(bg.lastSync)+'）':'')+'。精準度與是否響聲仍由系統決定。'};
+  }
+  if(!sup.ok)return {label:sup.kind==='install'?'需要安裝':'無法使用',tone:'warn',text:sup.reason};
+  if(!bg.enabled)return {label:'未啟用',tone:'',text:'目前只有網頁在前景時才會響鈴；切換 App 或鎖定螢幕後，結束時不會有任何提醒。按下方按鈕啟用。'};
+  if(p.perm!=='granted')return {label:'需要權限',tone:'warn',text:'通知權限沒有開啟，請到 iPhone「設定 → 通知 → 番茄鐘」開啟，再重新啟用。'};
+  if(bg.syncState==='needs-reenable')return {label:'需要重新啟用',tone:'warn',text:(bg.lastError||'訂閱已失效')+' 請先停用，再重新啟用。'};
+  if(bg.syncState==='error')return {label:'同步失敗',tone:'warn',text:(bg.lastError||'')+' 計時仍然正確，但在恢復連線前，不保證收到背景提醒。'};
+  if(bg.syncState==='ok')return {label:'已啟用',tone:'ok',text:'結束時間已同步到伺服器（'+hhmm(bg.lastSync)+'）。結束時由伺服器透過 Apple 推播服務送出通知；這是盡力送達，不保證準時，也無法由網頁確認是否送達。'};
+  return {label:'檢查中',tone:'',text:'正在同步…'};
+}
+function pill(label,tone){return '<span class="pill'+(tone?' '+tone:'')+'">'+esc(label)+'</span>';}
+function renderBg(){
+  var g=$('#gBg');if(!g)return;
+  var sup=bgSupport(),p=platform(),st=bgStatus(),h='';
+  h+='<div class="row"><div class="row-l"><div class="row-t">背景提醒'+pill(st.label,st.tone)+'</div><div class="row-s">'+esc(st.text)+'</div></div></div>';
+  var permL={granted:['已允許','ok'],denied:['已拒絕','warn'],'default':['尚未詢問',''],unsupported:['不支援','warn']}[p.perm]||['未知',''];
+  if(p.native){var nm={granted:'已允許',denied:'已拒絕'};permL=[nm[nativePermCache]||'按下啟用時詢問',nativePermCache==='granted'?'ok':(nativePermCache==='denied'?'warn':'')];}
+  h+='<div class="row"><div class="row-l"><div class="row-t">通知權限'+pill(permL[0],permL[1])+'</div>'+(p.perm==='denied'&&!p.native?'<div class="row-s">權限被拒絕後，網頁無法再次詢問。請到 iPhone「設定 → 通知 → 番茄鐘」開啟。</div>':'')+'</div></div>';
+  var inst=p.native?'原生 App':(p.standalone?'已加入主畫面':(p.iOS?'Safari 分頁':'瀏覽器分頁'));
+  h+='<div class="row"><div class="row-l"><div class="row-t">安裝狀態'+pill(inst,(p.native||p.standalone)?'ok':(p.iOS?'warn':''))+'</div>'+
+    (p.iOS&&!p.standalone&&!p.native?'<div class="row-s">Safari 分頁無法使用網頁推播；加入主畫面後，從主畫面圖示開啟，才能啟用背景提醒。</div>':'')+'</div></div>';
+  if(!p.native){
+    var host='';try{host=new URL(apiUrl('/'),location.href).host;}catch(e){}
+    var srv=!p.secure?['未連線','warn']:(bg.enabled?(bg.syncState==='ok'?['已連線','ok']:(bg.syncState==='idle'?['檢查中','']:['異常','warn'])):['未啟用','']);
+    h+='<div class="row"><div class="row-l"><div class="row-t">推播伺服器'+pill(srv[0],srv[1])+'</div><div class="row-s">'+esc(host||'（尚未設定）')+'</div></div></div>';
+  }else{
+    var snd=[['default','系統預設'],['triad.wav','三音旋律'],['crisp.wav','清脆提示音'],['soft.wav','柔和鈴聲']];
+    h+='<div class="row"><div class="row-l"><div class="row-t">通知聲音</div><div class="row-s">只能使用系統預設音，或打包進 App 的音檔（不能用網頁匯入的自訂鈴聲）。</div></div></div>'+
+      '<div class="row" style="padding-top:0;border-top:0"><div class="seg" role="radiogroup" aria-label="通知聲音" style="width:100%">'+snd.map(function(x){return '<button type="button" role="radio" data-action="native-sound" data-v="'+x[0]+'" aria-checked="'+(bg.nativeSound===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>';
+  }
+  h+='<div class="bg-actions">'+
+    (bg.enabled?'<button type="button" class="small-btn" data-action="bg-disable">停用背景提醒</button>':'<button type="button" class="btn primary" data-action="bg-enable">啟用背景提醒</button>')+
+    '<button type="button" class="small-btn" data-action="bg-test">測試通知</button>'+
+    '<button type="button" class="small-btn" data-action="test-chime">測試前景鈴聲</button></div>';
+  g.innerHTML=h;
+  var how=$('#howPwa'),hn=$('#howNative'),hx=$('#howIssues');
+  if(how)how.hidden=p.native;if(hn)hn.hidden=!p.native;
+  var det=$('#bgHow');if(det&&!det.dataset.touched&&(sup.kind==='install'))det.open=true;
+  var adv=$('#bgAdv');if(adv)adv.hidden=p.native;
+  var gd=$('#gDiag');if(gd){var sw=gd.querySelector('[data-key="diag"]');if(sw)sw.setAttribute('aria-checked',bg.diag?'true':'false');}
+}
+var nativePermCache='';
+
 /* ───────── 備份：匯出、匯入、清除 ───────── */
 function exportText(){
   var ex=Object.assign({},state.settings);delete ex.customTones;      // 自訂鈴聲的音訊檔不放進備份
@@ -1586,6 +2150,7 @@ function clearAll(){
     return confirmSheet({title:'再確認一次',body:'這個動作無法復原。確定要永久清除所有資料嗎？',okText:'永久清除',danger:true}).then(function(ok2){
       if(!ok2)return;
       try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'.corrupt');}catch(e){}
+      bgDisable(true);dbuf=[];try{localStorage.removeItem(DIAGKEY);localStorage.removeItem(BGKEY);}catch(e){}
       stopSound();bufCache={};ui.note='';ui.toneStage='focus';setToneMsg('');
       idbTx('readwrite',function(st){return st.clear();}).catch(function(){});
       state=defaultState();recomputeToday();manageTicker();manageWake();applyTheme();ui.filter='open';save();renderAll();toast('已清除所有資料');
@@ -1596,7 +2161,7 @@ function buildSettingsSync(){syncSettings();}
 
 /* ───────── 導覽與事件 ───────── */
 function renderAll(){
-  renderHeader();renderTaskBlock();renderTimer(true);renderOverview();
+  renderHeader();renderTaskBlock();renderTimer(true);renderOverview();renderMissed();
   if(ui.page==='tasks')renderTasks();
   if(ui.page==='stats')renderStats();
   syncSettings();
@@ -1665,6 +2230,18 @@ document.addEventListener('click',function(e){
     case 'import':openImport();break;
     case 'clear':clearAll();break;
     case 'banner-dismiss':setBanner(null,null);break;
+    case 'missed-dismiss':state.missed=[];save();renderMissed();break;
+    case 'bg-enable':bgEnable();break;
+    case 'bg-disable':bgDisable(false);break;
+    case 'bg-test':bgTest();break;
+    case 'test-chime':testChime();break;
+    case 'diag-open':openDiag();break;
+    case 'native-sound':bg.nativeSound=el.dataset.v;saveBg();renderBg();nativeSync('sound');break;
+    case 'bg-adv-save':
+      var na=normApi($('#bgApi').value),msgEl=$('#bgAdvMsg');
+      if(na===null){msgEl.textContent='網址必須以 https:// 開頭。';msgEl.className='msg bad';break;}
+      if(na!==bg.apiBase&&bg.enabled){msgEl.textContent='已儲存。換了伺服器後，請先「停用背景提醒」再重新啟用。';}else msgEl.textContent='已儲存。';
+      msgEl.className='msg';bg.apiBase=na;bg.regKey=$('#bgKey').value.trim().slice(0,100);saveBg();renderBg();break;
   }
 });
 
@@ -1689,13 +2266,28 @@ document.addEventListener('keydown',function(e){
   if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('label[for="imFile"]')){e.preventDefault();$('#imFile').click();}
 });
 
+/* 事件分工：
+ *  visibilitychange：最可靠的「回到前景／離開前景」訊號 → 離開時存檔，回來時立刻校正計時並重新同步排程。
+ *  pageshow：從 bfcache 還原時不會有 visibilitychange，要補一次校正。
+ *  focus：桌面瀏覽器切換視窗；與上面重複呼叫也沒問題，因為每個階段以 phaseId 去重，tick() 可重複執行。
+ *  pagehide：頁面即將被丟棄或凍結時存檔（iOS 不保證一定會觸發，所以另外在 visibilitychange 也存檔）。 */
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){save();stopPreview();manageWake();}
-  else{tick();manageWake();renderHeader();}
+  dlog('visibility',{state:document.visibilityState});
+  if(document.hidden){
+    save();stopPreview();manageWake();
+    nativeGuard=null;if(bg.enabled&&state.timer.status==='running')nativeSync('hidden');
+  }else{
+    tick();manageWake();renderHeader();
+    if(state.timer.status==='running'||bg.enabled){scheduleSync('visible');}
+    clearDelivered();
+  }
 });
-window.addEventListener('pageshow',function(){tick();});
+window.addEventListener('pageshow',function(e){dlog('pageshow',{persisted:!!e.persisted});tick();});
 window.addEventListener('focus',function(){tick();});
-window.addEventListener('pagehide',function(){save();});
+window.addEventListener('pagehide',function(e){dlog('pagehide',{persisted:!!e.persisted});save();});
+document.addEventListener('resume',function(){dlog('resume-event');tick();});
+window.addEventListener('online',function(){dlog('online');if(bg.enabled)scheduleSync('online');});
+window.addEventListener('offline',function(){dlog('offline');});
 window.addEventListener('storage',function(e){
   if(e.key!==KEY||!e.newValue)return;
   try{var st=sanitize(JSON.parse(e.newValue));if(st){state=st;recomputeToday();manageTicker();renderAll();}}catch(_){}
@@ -1714,10 +2306,14 @@ if(window.matchMedia){
   if(r.problem==='corrupt')setBanner('notice','儲存的資料已損毀，已改用空白資料重新開始。如果你有 JSON 備份，可以到「設定」匯入。');
   if(r.problem==='blocked')setBanner('storage','這個瀏覽器目前不允許網站儲存資料，關閉頁面後內容會消失。請先到「設定」匯出備份。');
   renderAll();
+  if(bg.diag)loadDiag();
+  dlog('app-open',{vis:document.visibilityState,timer:state.timer.status,standalone:platform().standalone});
+  registerSW();
   tick();manageTicker();manageWake();
   save();
   renderTones();
   reconcileTones();
+  renderBg();bgVerify();
   if(state.timer.status==='running'&&state.settings.sound)toast('計時已恢復。點一下畫面即可啟用結束時的鈴聲',3800);
 })();
 })();
